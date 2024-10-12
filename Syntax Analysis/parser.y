@@ -3,147 +3,99 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct ParseTreeNode {
-    char *value;                           // Holds the value of the node (e.g., token or rule name)
-    struct ParseTreeNode **children;      // Array of child nodes
-    int childCount;                       // Number of children
-} ParseTreeNode;
+// Node structure for parse tree
+struct node {
+    struct node *left;
+    struct node *right;
+    char *token; // Abstract representation
+    char *code;  // Actual code representation
+    int id;      // Unique identifier for each node
+};
 
 // Function prototypes
-ParseTreeNode *createNode(const char *value);
-void printParseTree(ParseTreeNode *node, int level);
-void freeParseTree(ParseTreeNode *node);
+struct node* mknode(struct node *left, struct node *right, const char *token, const char *code);
+void printtree(struct node *tree);
+void printInorder(struct node *tree, int depth);
+int yylex(void);
+int yyerror(const char *s);
+extern FILE *yyin;
 
-int yylex(void); 
-int yyerror(const char *s); 
-extern FILE *yyin;  
+// Root of the parse tree
+struct node *head;
+int nodeCounter = 1; // Counter for unique node IDs
 %}
 
-// Define YYSTYPE to be a pointer to ParseTreeNode
 %union {
-    ParseTreeNode *node;  // Use this to hold the parse tree nodes
-    int intval;           // If you need to hold integer values
+    struct node* nd;   // Parse tree node
+    char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.
 }
 
-%token <node> PREPROCESSOR PREPROCESSOR_KEYWORD HEADER_FILE FUNCTION  
-%token <node> KEYWORD IDENTIFIER VALUE STRING_LITERAL  
-%token <node> ASSIGNMENT_OPERATOR SPECIAL_SYMBOL TERMINATOR_SYMBOL COMMA  
-%token <node> OPEN_BRACE CLOSE_BRACE OPEN_PARENTHESIS CLOSE_PARENTHESIS  
-%token <node> PLUS_OPERATOR MINUS_OPERATOR INCREMENT_OPERATOR DECREMENT_OPERATOR  
-%token <node> FOR WHILE DO UNKNOWN_SYMBOL
+%token <str> PREPROCESSOR PREPROCESSOR_KEYWORD HEADER_FILE FUNCTION  
+%token <str> KEYWORD IDENTIFIER VALUE STRING_LITERAL  
+%token <str> ASSIGNMENT_OPERATOR SPECIAL_SYMBOL TERMINATOR_SYMBOL COMMA  
+%token <str> OPEN_BRACE CLOSE_BRACE OPEN_PARENTHESIS CLOSE_PARENTHESIS  
+%token <str> PLUS_OPERATOR MINUS_OPERATOR INCREMENT_OPERATOR DECREMENT_OPERATOR  
+%token <str> FOR WHILE DO UNKNOWN_SYMBOL
+
+%type <nd> program preprocessor_statement function_definition declarations declaration_list variable_declaration statement_list statement loop_statement for_loop_statement for_initialization condition for_update arithmetic_expression while_loop_statement do_while_statement function_call_statement expression_statement
 
 %% 
 
 program:  
     preprocessor_statement function_definition 
     { 
-        $$ = createNode("program");
-        $$->children = malloc(2 * sizeof(ParseTreeNode*));
-        $$->children[0] = $1; // Preprocessor statement
-        $$->children[1] = $2; // Function definition
-        $$->childCount = 2;
-        printf("Parsing completed. Printing parse tree:\n");
-        printParseTree($$, 0); // Print the parse tree
-        freeParseTree($$); // Clean up after printing
-    }
-    ;
+        $$ = mknode($1, $2, "program", "Program Structure"); 
+        head = $$; 
+    };  
 
 preprocessor_statement:  
     PREPROCESSOR PREPROCESSOR_KEYWORD SPECIAL_SYMBOL HEADER_FILE SPECIAL_SYMBOL  
     { 
-        $$ = createNode("preprocessor_statement");
-        $$->children = malloc(5 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode("#");
-        $$->children[1] = createNode(yytext); // Preprocessor keyword
-        $$->children[2] = createNode("<"); // Special symbol
-        $$->children[3] = createNode(yytext); // Header file
-        $$->children[4] = createNode(">"); // Special symbol
-        $$->childCount = 5;
         printf("Preprocessor directive parsed successfully!\n"); 
-    }
-    ;  
+        $$ = mknode(NULL, NULL, "Preprocessor", "Preprocessor directive");
+    };  
 
 function_definition:  
     KEYWORD FUNCTION OPEN_PARENTHESIS CLOSE_PARENTHESIS OPEN_BRACE declarations statement_list CLOSE_BRACE  
     { 
-        $$ = createNode("function_definition");
-        $$->children = malloc(6 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode(yytext); // Keyword
-        $$->children[1] = createNode(yytext); // Function name
-        $$->children[2] = createNode("(");
-        $$->children[3] = createNode(")");
-        $$->children[4] = $6; // Body of the function
-        $$->childCount = 5;
         printf("Function definition processed correctly!\n"); 
-    }
-    ;  
+        $$ = mknode($6, $7, "Function", "Function definition");
+    };  
 
 declarations:  
     KEYWORD declaration_list TERMINATOR_SYMBOL  
     { 
-        $$ = createNode("declarations");
-        $$->children = malloc(2 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode(yytext); // Keyword
-        $$->children[1] = $2; // Declaration list
-        $$->childCount = 2;
         printf("Variables declared and initialized.\n"); 
-    }
-    ;  
+        $$ = mknode($2, NULL, "Declarations", "Declarations");
+    };  
 
 declaration_list:  
-    variable_declaration 
-    { 
-        $$ = createNode("declaration_list");
-        $$->children = malloc(1 * sizeof(ParseTreeNode*));
-        $$->children[0] = $1; // Variable declaration
-        $$->childCount = 1;
-    }
+    variable_declaration
     | variable_declaration COMMA declaration_list 
     { 
-        $$ = createNode("declaration_list");
-        $$->children = malloc(2 * sizeof(ParseTreeNode*));
-        $$->children[0] = $1; // Variable declaration
-        $$->children[1] = $3; // Recursive declaration list
-        $$->childCount = 2;
-    }
-    ; 
+        $$ = mknode($1, $3, "Declaration_List", "Declaration List");
+    }; 
 
 variable_declaration:  
-    IDENTIFIER ASSIGNMENT_OPERATOR VALUE 
+    IDENTIFIER ASSIGNMENT_OPERATOR VALUE
     { 
-        $$ = createNode("variable_declaration");
-        $$->children = malloc(3 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode($1); // Identifier
-        $$->children[1] = createNode("="); // Assignment operator
-        $$->children[2] = createNode($3); // Value
-        $$->childCount = 3; 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3);
+        $$ = mknode(NULL, NULL, "Var_Declaration", strdup(buffer));
     }
-    | IDENTIFIER // Allow for declaration without initialization
+    | IDENTIFIER 
     { 
-        $$ = createNode("variable_declaration");
-        $$->children = malloc(1 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode($1); // Identifier
-        $$->childCount = 1; 
-    }
-    ; 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s", $1);
+        $$ = mknode(NULL, NULL, "Var_Declaration", strdup(buffer));
+    }; 
 
 statement_list:  
-    statement 
-    { 
-        $$ = createNode("statement_list");
-        $$->children = malloc(1 * sizeof(ParseTreeNode*));
-        $$->children[0] = $1; // Statement
-        $$->childCount = 1; 
-    }
+    statement  
     | statement_list statement  
     { 
-        $$ = createNode("statement_list");
-        $$->children = malloc(2 * sizeof(ParseTreeNode*));
-        $$->children[0] = $1; // Previous statement list
-        $$->children[1] = $2; // New statement
-        $$->childCount = 2; 
-    }
-    ;  
+        $$ = mknode($1, $2, "Statements", "Statement List");
+    };  
 
 statement:  
     loop_statement  
@@ -160,171 +112,147 @@ loop_statement:
 for_loop_statement:  
     FOR OPEN_PARENTHESIS for_initialization TERMINATOR_SYMBOL condition TERMINATOR_SYMBOL for_update CLOSE_PARENTHESIS OPEN_BRACE statement_list CLOSE_BRACE  
     { 
-        $$ = createNode("for_loop_statement");
-        $$->children = malloc(8 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode("for");
-        $$->children[1] = createNode("(");
-        $$->children[2] = $3; // For initialization
-        $$->children[3] = createNode(";"); // Terminator
-        $$->children[4] = $5; // Condition
-        $$->children[5] = createNode(";"); // Terminator
-        $$->children[6] = $7; // For update
-        $$->children[7] = $9; // Statement list
-        $$->childCount = 8; 
         printf("For loop parsed successfully!\n"); 
-    }
-    ;  
+        $$ = mknode($3, mknode($5, $7, "For_Update", "For Update"), "For_Loop", "For Loop");
+    };  
 
 for_initialization:  
     IDENTIFIER ASSIGNMENT_OPERATOR VALUE  
     { 
-        $$ = createNode("for_initialization");
-        $$->children = malloc(3 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode($1); // Identifier
-        $$->children[1] = createNode("="); // Assignment operator
-        $$->children[2] = createNode($3); // Value
-        $$->childCount = 3; 
         printf("For loop initialization parsed.\n"); 
-    }
-    ;  
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3);
+        $$ = mknode(NULL, NULL, "For_Initialization", strdup(buffer));
+    };  
 
 condition:  
     IDENTIFIER SPECIAL_SYMBOL VALUE  
     { 
-        $$ = createNode("condition");
-        $$->children = malloc(3 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode($1); // Identifier
-        $$->children[1] = createNode(yytext); // Condition operator
-        $$->children[2] = createNode($3); // Value
-        $$->childCount = 3; 
         printf("Condition parsed.\n"); 
-    }
-    ;  
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s %s %s", $1, $2, $3);
+        $$ = mknode(NULL, NULL, "Condition", strdup(buffer));
+    };  
 
 for_update:  
     IDENTIFIER INCREMENT_OPERATOR  
+    { 
+        printf("For loop update parsed.\n"); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s++", $1);
+        $$ = mknode(NULL, NULL, "For_Update", strdup(buffer));
+    }
     | IDENTIFIER DECREMENT_OPERATOR  
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s--", $1);
+        $$ = mknode(NULL, NULL, "For_Update", strdup(buffer));
+    }
     | IDENTIFIER ASSIGNMENT_OPERATOR arithmetic_expression  
     { 
-        $$ = createNode("for_update");
-        $$->children = malloc(3 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode($1); // Identifier
-        $$->children[1] = createNode(yytext); // Increment/Decrement operator
-        $$->children[2] = $3; // Arithmetic expression
-        $$->childCount = 3; 
-        printf("For loop update parsed.\n"); 
-    }
-    ;  
+        printf("For loop update parsed.\n");
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3);
+        $$ = mknode(NULL, NULL, "For_Update", strdup(buffer));
+    };  
 
 arithmetic_expression:  
     IDENTIFIER PLUS_OPERATOR VALUE  
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s + %s", $1, $3);
+        $$ = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
+    }
     | IDENTIFIER MINUS_OPERATOR VALUE  
-    ;  
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s - %s", $1, $3);
+        $$ = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
+    };  
 
 while_loop_statement:  
     WHILE OPEN_PARENTHESIS condition CLOSE_PARENTHESIS OPEN_BRACE statement_list CLOSE_BRACE  
     { 
-        $$ = createNode("while_loop_statement");
-        $$->children = malloc(6 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode("while");
-        $$->children[1] = createNode("(");
-        $$->children[2] = $4; // Condition
-        $$->children[3] = createNode(")");
-        $$->children[4] = $6; // Statement list
-        $$->childCount = 5; 
         printf("While loop parsed successfully!\n"); 
-    }
-    ;  
+        $$ = mknode($3, $6, "While_Loop", "While Loop");
+    };  
 
 do_while_statement:  
     DO OPEN_BRACE statement_list CLOSE_BRACE WHILE OPEN_PARENTHESIS condition CLOSE_PARENTHESIS TERMINATOR_SYMBOL  
     { 
-        $$ = createNode("do_while_statement");
-        $$->children = malloc(6 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode("do");
-        $$->children[1] = $3; // Statement list
-        $$->children[2] = createNode("while");
-        $$->children[3] = createNode("(");
-        $$->children[4] = $6; // Condition
-        $$->children[5] = createNode(")");
-        $$->childCount = 6; 
         printf("Do-while loop parsed successfully!\n"); 
-    }
-    ;  
+        $$ = mknode($3, $6, "Do_While_Loop", "Do While Loop");
+    };  
 
 function_call_statement:  
-    IDENTIFIER OPEN_PARENTHESIS CLOSE_PARENTHESIS TERMINATOR_SYMBOL  
+    FUNCTION OPEN_PARENTHESIS STRING_LITERAL CLOSE_PARENTHESIS TERMINATOR_SYMBOL  
     { 
-        $$ = createNode("function_call");
-        $$->children = malloc(4 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode($1); // Function identifier
-        $$->children[1] = createNode("(");
-        $$->children[2] = createNode(")"); // Placeholder for parameters
-        $$->children[3] = createNode(";"); // Terminator
-        $$->childCount = 4; 
-        printf("Function call parsed successfully!\n"); 
-    }
-    ;  
+        printf("Function call encountered!\n"); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "printf(%s)", $3);
+        $$ = mknode(NULL, NULL, "Function_Call", strdup(buffer));
+    };  
 
 expression_statement:  
     IDENTIFIER ASSIGNMENT_OPERATOR VALUE TERMINATOR_SYMBOL  
     { 
-        $$ = createNode("expression_statement");
-        $$->children = malloc(4 * sizeof(ParseTreeNode*));
-        $$->children[0] = createNode($1); // Identifier
-        $$->children[1] = createNode("="); // Assignment operator
-        $$->children[2] = createNode($3); // Value
-        $$->children[3] = createNode(";"); // Terminator
-        $$->childCount = 4; 
-        printf("Expression statement parsed successfully!\n"); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3);
+        $$ = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
     }
-    ;  
+    | IDENTIFIER INCREMENT_OPERATOR TERMINATOR_SYMBOL  
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s++", $1);
+        $$ = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
+    }
+    | IDENTIFIER DECREMENT_OPERATOR TERMINATOR_SYMBOL  
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s--", $1);
+        $$ = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
+    };  
 
-%% 
+%%  
 
-// Function to create a new parse tree node
-ParseTreeNode *createNode(const char *value) {
-    ParseTreeNode *node = malloc(sizeof(ParseTreeNode));
-    node->value = strdup(value);
-    node->children = NULL;
-    node->childCount = 0;
-    return node;
+int main(void) {  
+    FILE *file = fopen("test.txt", "r");     
+    if (!file) {         
+        perror("Failed to open input file");         
+        return 1;  
+    }      
+    yyin = file;  
+    yyparse();  
+    fclose(file);  
+    
+    // Print the parse tree after parsing
+    printf("\n\nParse Tree Inorder Traversal:\n");
+    printtree(head);
+    
+    return 0;  
+}  
+
+int yyerror(const char *s) {     
+    fprintf(stderr, "Syntax error detected: %s\n", s);     
+    return 0;  
 }
 
-// Function to print the parse tree (with indentation for clarity)
-void printParseTree(ParseTreeNode *node, int level) {
-    if (!node) return;
-    for (int i = 0; i < level; i++) printf("  "); // Indentation
-    printf("%s\n", node->value);
-    for (int i = 0; i < node->childCount; i++) {
-        printParseTree(node->children[i], level + 1);
-    }
+// Create a new node for the parse tree
+struct node* mknode(struct node *left, struct node *right, const char *token, const char *code) {
+    struct node *newnode = (struct node*)malloc(sizeof(struct node));
+    newnode->left = left;
+    newnode->right = right;
+    newnode->token = strdup(token); // Allocate and copy token string
+    newnode->code = strdup(code);   // Allocate and copy code string
+    newnode->id = nodeCounter++;
+    return newnode;
 }
 
-// Function to free the parse tree
-void freeParseTree(ParseTreeNode *node) {
-    if (!node) return;
-    for (int i = 0; i < node->childCount; i++) {
-        freeParseTree(node->children[i]);
+// Print the parse tree in Inorder
+void printtree(struct node *tree) {
+    if (tree != NULL) {
+        printtree(tree->left);
+        printf("  Node ID: %d, Token: %s, Code: %s\n", tree->id, tree->token, tree->code);
+        printtree(tree->right);
     }
-    free(node->value);
-    free(node->children);
-    free(node);
-}
-
-int main(int argc, char **argv) {
-    if (argc > 1) {
-        yyin = fopen(argv[1], "r");
-        if (!yyin) {
-            perror("Failed to open file");
-            return 1;
-        }
-    }
-    yyparse();
-    return 0;
-}
-
-int yyerror(const char *s) {
-    fprintf(stderr, "Parse error: %s\n", s);
-    return 0;
 }

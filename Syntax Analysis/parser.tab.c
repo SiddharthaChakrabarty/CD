@@ -74,24 +74,30 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct ParseTreeNode {
-    char *value;                           // Holds the value of the node (e.g., token or rule name)
-    struct ParseTreeNode **children;      // Array of child nodes
-    int childCount;                       // Number of children
-} ParseTreeNode;
+// Node structure for parse tree
+struct node {
+    struct node *left;
+    struct node *right;
+    char *token; // Abstract representation
+    char *code;  // Actual code representation
+    int id;      // Unique identifier for each node
+};
 
 // Function prototypes
-ParseTreeNode *createNode(const char *value);
-void printParseTree(ParseTreeNode *node, int level);
-void freeParseTree(ParseTreeNode *node);
+struct node* mknode(struct node *left, struct node *right, const char *token, const char *code);
+void printtree(struct node *tree);
+void printInorder(struct node *tree, int depth);
+int yylex(void);
+int yyerror(const char *s);
+extern FILE *yyin;
 
-int yylex(void); 
-int yyerror(const char *s); 
-extern FILE *yyin;  
+// Root of the parse tree
+struct node *head;
+int nodeCounter = 1; // Counter for unique node IDs
 
 
 /* Line 189 of yacc.c  */
-#line 95 "parser.tab.c"
+#line 101 "parser.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -148,7 +154,20 @@ extern FILE *yyin;
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+typedef union YYSTYPE
+{
+
+/* Line 214 of yacc.c  */
+#line 28 "parser.y"
+
+    struct node* nd;   // Parse tree node
+    char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.
+
+
+
+/* Line 214 of yacc.c  */
+#line 170 "parser.tab.c"
+} YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -159,7 +178,7 @@ typedef int YYSTYPE;
 
 
 /* Line 264 of yacc.c  */
-#line 163 "parser.tab.c"
+#line 182 "parser.tab.c"
 
 #ifdef short
 # undef short
@@ -456,12 +475,12 @@ static const yytype_int8 yyrhs[] =
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
-static const yytype_uint16 yyrline[] =
+static const yytype_uint8 yyrline[] =
 {
-       0,    32,    32,    45,    59,    73,    84,    91,   102,   111,
-     121,   128,   139,   140,   141,   145,   146,   147,   151,   170,
-     182,   194,   195,   196,   208,   209,   213,   227,   242,   255,
-     256,   257
+       0,    45,    45,    52,    59,    66,    73,    74,    80,    86,
+      94,    95,   101,   102,   103,   107,   108,   109,   113,   120,
+     129,   138,   145,   151,   160,   166,   174,   181,   188,   197,
+     203,   209
 };
 #endif
 
@@ -1423,33 +1442,20 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 33 "parser.y"
+#line 46 "parser.y"
     { 
-        (yyval) = createNode("program");
-        (yyval)->children = malloc(2 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = (yyvsp[(1) - (2)]); // Preprocessor statement
-        (yyval)->children[1] = (yyvsp[(2) - (2)]); // Function definition
-        (yyval)->childCount = 2;
-        printf("Parsing completed. Printing parse tree:\n");
-        printParseTree((yyval), 0); // Print the parse tree
-        freeParseTree((yyval)); // Clean up after printing
+        (yyval.nd) = mknode((yyvsp[(1) - (2)].nd), (yyvsp[(2) - (2)].nd), "program", "Program Structure"); 
+        head = (yyval.nd); 
     ;}
     break;
 
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 46 "parser.y"
+#line 53 "parser.y"
     { 
-        (yyval) = createNode("preprocessor_statement");
-        (yyval)->children = malloc(5 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode("#");
-        (yyval)->children[1] = createNode(yytext); // Preprocessor keyword
-        (yyval)->children[2] = createNode("<"); // Special symbol
-        (yyval)->children[3] = createNode(yytext); // Header file
-        (yyval)->children[4] = createNode(">"); // Special symbol
-        (yyval)->childCount = 5;
         printf("Preprocessor directive parsed successfully!\n"); 
+        (yyval.nd) = mknode(NULL, NULL, "Preprocessor", "Preprocessor directive");
     ;}
     break;
 
@@ -1458,244 +1464,221 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 60 "parser.y"
     { 
-        (yyval) = createNode("function_definition");
-        (yyval)->children = malloc(5 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode(yytext); // Keyword
-        (yyval)->children[1] = createNode(yytext); // Function name
-        (yyval)->children[2] = createNode("(");
-        (yyval)->children[3] = createNode(")");
-        (yyval)->children[4] = (yyvsp[(6) - (8)]); // Body of the function
-        (yyval)->childCount = 5;
         printf("Function definition processed correctly!\n"); 
+        (yyval.nd) = mknode((yyvsp[(6) - (8)].nd), (yyvsp[(7) - (8)].nd), "Function", "Function definition");
     ;}
     break;
 
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 74 "parser.y"
+#line 67 "parser.y"
     { 
-        (yyval) = createNode("declarations");
-        (yyval)->children = malloc(2 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode(yytext); // Keyword
-        (yyval)->children[1] = (yyvsp[(2) - (3)]); // Declaration list
-        (yyval)->childCount = 2;
         printf("Variables declared and initialized.\n"); 
-    ;}
-    break;
-
-  case 6:
-
-/* Line 1455 of yacc.c  */
-#line 85 "parser.y"
-    { 
-        (yyval) = createNode("declaration_list");
-        (yyval)->children = malloc(1 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = (yyvsp[(1) - (1)]); // Variable declaration
-        (yyval)->childCount = 1;
+        (yyval.nd) = mknode((yyvsp[(2) - (3)].nd), NULL, "Declarations", "Declarations");
     ;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 92 "parser.y"
+#line 75 "parser.y"
     { 
-        (yyval) = createNode("declaration_list");
-        (yyval)->children = malloc(2 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = (yyvsp[(1) - (3)]); // Variable declaration
-        (yyval)->children[1] = (yyvsp[(3) - (3)]); // Recursive declaration list
-        (yyval)->childCount = 2;
+        (yyval.nd) = mknode((yyvsp[(1) - (3)].nd), (yyvsp[(3) - (3)].nd), "Declaration_List", "Declaration List");
     ;}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 103 "parser.y"
+#line 81 "parser.y"
     { 
-        (yyval) = createNode("variable_declaration");
-        (yyval)->children = malloc(3 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode((yyvsp[(1) - (3)])); // Identifier
-        (yyval)->children[1] = createNode("="); // Assignment operator
-        (yyval)->children[2] = createNode((yyvsp[(3) - (3)])); // Value
-        (yyval)->childCount = 3; 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str));
+        (yyval.nd) = mknode(NULL, NULL, "Var_Declaration", strdup(buffer));
     ;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 112 "parser.y"
+#line 87 "parser.y"
     { 
-        (yyval) = createNode("variable_declaration");
-        (yyval)->children = malloc(1 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode((yyvsp[(1) - (1)])); // Identifier
-        (yyval)->childCount = 1; 
-    ;}
-    break;
-
-  case 10:
-
-/* Line 1455 of yacc.c  */
-#line 122 "parser.y"
-    { 
-        (yyval) = createNode("statement_list");
-        (yyval)->children = malloc(1 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = (yyvsp[(1) - (1)]); // Statement
-        (yyval)->childCount = 1; 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s", (yyvsp[(1) - (1)].str));
+        (yyval.nd) = mknode(NULL, NULL, "Var_Declaration", strdup(buffer));
     ;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 129 "parser.y"
+#line 96 "parser.y"
     { 
-        (yyval) = createNode("statement_list");
-        (yyval)->children = malloc(2 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = (yyvsp[(1) - (2)]); // Previous statement list
-        (yyval)->children[1] = (yyvsp[(2) - (2)]); // New statement
-        (yyval)->childCount = 2; 
+        (yyval.nd) = mknode((yyvsp[(1) - (2)].nd), (yyvsp[(2) - (2)].nd), "Statements", "Statement List");
     ;}
     break;
 
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 152 "parser.y"
+#line 114 "parser.y"
     { 
-        (yyval) = createNode("for_loop_statement");
-        (yyval)->children = malloc(7 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode("for");
-        (yyval)->children[1] = createNode("(");
-        (yyval)->children[2] = (yyvsp[(3) - (11)]); // For initialization
-        (yyval)->children[3] = createNode(";"); // Terminator
-        (yyval)->children[4] = (yyvsp[(5) - (11)]); // Condition
-        (yyval)->children[5] = createNode(";"); // Terminator
-        (yyval)->children[6] = (yyvsp[(7) - (11)]); // For update
-        (yyval)->childCount = 7;
-        (yyval)->children = realloc((yyval)->children, 8 * sizeof(ParseTreeNode*)); // Resize to add body
-        (yyval)->children[7] = (yyvsp[(9) - (11)]); // Statement list
-        (yyval)->childCount++; // Increment count for the body
         printf("For loop parsed successfully!\n"); 
+        (yyval.nd) = mknode((yyvsp[(3) - (11)].nd), mknode((yyvsp[(5) - (11)].nd), (yyvsp[(7) - (11)].nd), "For_Update", "For Update"), "For_Loop", "For Loop");
     ;}
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 171 "parser.y"
+#line 121 "parser.y"
     { 
-        (yyval) = createNode("for_initialization");
-        (yyval)->children = malloc(3 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode((yyvsp[(1) - (3)])); // Identifier
-        (yyval)->children[1] = createNode("="); // Assignment operator
-        (yyval)->children[2] = createNode((yyvsp[(3) - (3)])); // Value
-        (yyval)->childCount = 3; 
         printf("For loop initialization parsed.\n"); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str));
+        (yyval.nd) = mknode(NULL, NULL, "For_Initialization", strdup(buffer));
     ;}
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 183 "parser.y"
+#line 130 "parser.y"
     { 
-        (yyval) = createNode("condition");
-        (yyval)->children = malloc(3 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode((yyvsp[(1) - (3)])); // Identifier
-        (yyval)->children[1] = createNode(yytext); // Condition operator
-        (yyval)->children[2] = createNode((yyvsp[(3) - (3)])); // Value
-        (yyval)->childCount = 3; 
         printf("Condition parsed.\n"); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s %s %s", (yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].str), (yyvsp[(3) - (3)].str));
+        (yyval.nd) = mknode(NULL, NULL, "Condition", strdup(buffer));
+    ;}
+    break;
+
+  case 21:
+
+/* Line 1455 of yacc.c  */
+#line 139 "parser.y"
+    { 
+        printf("For loop update parsed.\n"); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s++", (yyvsp[(1) - (2)].str));
+        (yyval.nd) = mknode(NULL, NULL, "For_Update", strdup(buffer));
+    ;}
+    break;
+
+  case 22:
+
+/* Line 1455 of yacc.c  */
+#line 146 "parser.y"
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s--", (yyvsp[(1) - (2)].str));
+        (yyval.nd) = mknode(NULL, NULL, "For_Update", strdup(buffer));
     ;}
     break;
 
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 197 "parser.y"
+#line 152 "parser.y"
     { 
-        (yyval) = createNode("for_update");
-        (yyval)->children = malloc(3 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode((yyvsp[(1) - (3)])); // Identifier
-        (yyval)->children[1] = createNode(yytext); // Increment/Decrement operator
-        (yyval)->children[2] = (yyvsp[(3) - (3)]); // Arithmetic expression
-        (yyval)->childCount = 2; 
-        printf("For loop update parsed.\n"); 
+        printf("For loop update parsed.\n");
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].nd));
+        (yyval.nd) = mknode(NULL, NULL, "For_Update", strdup(buffer));
+    ;}
+    break;
+
+  case 24:
+
+/* Line 1455 of yacc.c  */
+#line 161 "parser.y"
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s + %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str));
+        (yyval.nd) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
+    ;}
+    break;
+
+  case 25:
+
+/* Line 1455 of yacc.c  */
+#line 167 "parser.y"
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s - %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str));
+        (yyval.nd) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
     ;}
     break;
 
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 214 "parser.y"
+#line 175 "parser.y"
     { 
-        (yyval) = createNode("while_loop_statement");
-        (yyval)->children = malloc(5 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode("while");
-        (yyval)->children[1] = createNode("(");
-        (yyval)->children[2] = (yyvsp[(3) - (7)]); // Condition
-        (yyval)->children[3] = createNode(")"); // Closing parenthesis
-        (yyval)->children[4] = (yyvsp[(6) - (7)]); // Statement list
-        (yyval)->childCount = 5; 
         printf("While loop parsed successfully!\n"); 
+        (yyval.nd) = mknode((yyvsp[(3) - (7)].nd), (yyvsp[(6) - (7)].nd), "While_Loop", "While Loop");
     ;}
     break;
 
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 228 "parser.y"
+#line 182 "parser.y"
     { 
-        (yyval) = createNode("do_while_statement");
-        (yyval)->children = malloc(6 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode("do");
-        (yyval)->children[1] = (yyvsp[(3) - (9)]); // Statement list
-        (yyval)->children[2] = createNode("while");
-        (yyval)->children[3] = createNode("(");
-        (yyval)->children[4] = (yyvsp[(6) - (9)]); // Condition
-        (yyval)->children[5] = createNode(")"); // Closing parenthesis
-        (yyval)->childCount = 6; 
         printf("Do-while loop parsed successfully!\n"); 
+        (yyval.nd) = mknode((yyvsp[(3) - (9)].nd), (yyvsp[(6) - (9)].str), "Do_While_Loop", "Do While Loop");
     ;}
     break;
 
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 243 "parser.y"
+#line 189 "parser.y"
     { 
-        (yyval) = createNode("function_call_statement");
-        (yyval)->children = malloc(4 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode(yytext); // Function name
-        (yyval)->children[1] = createNode("(");
-        (yyval)->children[2] = createNode((yyvsp[(3) - (5)])); // String literal
-        (yyval)->children[3] = createNode(")"); // Closing parenthesis
-        (yyval)->childCount = 4; 
         printf("Function call encountered!\n"); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "printf(%s)", (yyvsp[(3) - (5)].str));
+        (yyval.nd) = mknode(NULL, NULL, "Function_Call", strdup(buffer));
+    ;}
+    break;
+
+  case 29:
+
+/* Line 1455 of yacc.c  */
+#line 198 "parser.y"
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str));
+        (yyval.nd) = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
+    ;}
+    break;
+
+  case 30:
+
+/* Line 1455 of yacc.c  */
+#line 204 "parser.y"
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s++", (yyvsp[(1) - (3)].str));
+        (yyval.nd) = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
     ;}
     break;
 
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 258 "parser.y"
+#line 210 "parser.y"
     { 
-        (yyval) = createNode("expression_statement");
-        (yyval)->children = malloc(3 * sizeof(ParseTreeNode*));
-        (yyval)->children[0] = createNode((yyvsp[(1) - (3)])); // Identifier
-        (yyval)->children[1] = createNode(yytext); // Operator
-        (yyval)->children[2] = createNode((yyvsp[(3) - (3)])); // Value or symbol
-        (yyval)->childCount = 3; 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s--", (yyvsp[(1) - (3)].str));
+        (yyval.nd) = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
     ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 1699 "parser.tab.c"
+#line 1682 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1907,37 +1890,8 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 268 "parser.y"
+#line 216 "parser.y"
   
-
-// Memory management and tree printing functions
-
-ParseTreeNode *createNode(const char *value) {
-    ParseTreeNode *node = malloc(sizeof(ParseTreeNode));
-    node->value = strdup(value);
-    node->children = NULL;
-    node->childCount = 0;
-    return node;
-}
-
-void printParseTree(ParseTreeNode *node, int level) {
-    if (node == NULL) return;
-    for (int i = 0; i < level; i++) printf("  "); // Indentation
-    printf("%s\n", node->value); // Print the node value
-    for (int i = 0; i < node->childCount; i++) {
-        printParseTree(node->children[i], level + 1); // Print child nodes
-    }
-}
-
-void freeParseTree(ParseTreeNode *node) {
-    if (node == NULL) return;
-    for (int i = 0; i < node->childCount; i++) {
-        freeParseTree(node->children[i]); // Free child nodes
-    }
-    free(node->value); // Free the value
-    free(node->children); // Free child pointers
-    free(node); // Free the node itself
-}
 
 int main(void) {  
     FILE *file = fopen("test.txt", "r");     
@@ -1948,11 +1902,36 @@ int main(void) {
     yyin = file;  
     yyparse();  
     fclose(file);  
+    
+    // Print the parse tree after parsing
+    printf("\n\nParse Tree Inorder Traversal:\n");
+    printtree(head);
+    
     return 0;  
 }  
 
 int yyerror(const char *s) {     
     fprintf(stderr, "Syntax error detected: %s\n", s);     
     return 0;  
+}
+
+// Create a new node for the parse tree
+struct node* mknode(struct node *left, struct node *right, const char *token, const char *code) {
+    struct node *newnode = (struct node*)malloc(sizeof(struct node));
+    newnode->left = left;
+    newnode->right = right;
+    newnode->token = strdup(token); // Allocate and copy token string
+    newnode->code = strdup(code);   // Allocate and copy code string
+    newnode->id = nodeCounter++;
+    return newnode;
+}
+
+// Print the parse tree in Inorder
+void printtree(struct node *tree) {
+    if (tree != NULL) {
+        printtree(tree->left);
+        printf("  Node ID: %d, Token: %s, Code: %s\n", tree->id, tree->token, tree->code);
+        printtree(tree->right);
+    }
 }
 
