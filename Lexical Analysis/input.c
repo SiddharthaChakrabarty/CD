@@ -1,15 +1,19 @@
-for (int i = 0; i < 10; i++)
-{
-    printf("%d\n", i);
-}
+#include <stdio.h>
 
-while (i > 0)
-{
-    printf("%d\n", i);
-    i--;
-}
+void main() {
+    int x = 0, y = 5, z = 10;
 
-do
-{
-    printf("Looping\n");
-} while (i < 5);
+    for (x = 0; x < 5; x++) {
+        printf("For loop");
+    }
+
+    while (y > 0) {
+        printf("While loop");
+        y--; 
+    }
+
+    do {
+        printf("Do-While Loop");
+        z--; 
+    } while (z > 0);
+}
