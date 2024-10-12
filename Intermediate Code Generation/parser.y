@@ -213,12 +213,18 @@ expression_statement:
 
 %%  
 
-int main(void) {  
-    FILE *file = fopen("test.txt", "r");     
+int main(int argc, char *argv[]) {  
+    if (argc < 2) { // Check if the filename is provided
+        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+        return 1;  
+    }
+
+    FILE *file = fopen(argv[1], "r"); // Open the file using the provided filename
     if (!file) {         
         perror("Failed to open input file");         
         return 1;  
     }      
+
     yyin = file;  
     yyparse();  
     fclose(file);  
