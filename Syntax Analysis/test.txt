@@ -1,42 +1,18 @@
-int main() {
-    
+#include <stdio.h>
 
-    for (int i = 0; i < 10; i++) {
-        printf("%d\n", i);
+void main() {
+    int x = 0, y = 1;
+    
+    for (x = 0; x < 5; x++) {
+        printf("Hello");
     }
 
-   
-    int count = 0;
-    while (count < 5) {
-        count++;
-        printf("%d\n", count);
+    while (y < 5) {
+        printf("World");
+        y++;
     }
 
-    
-    int num = 0;
     do {
-        printf("%d\n", num);
-        num++;
-    } while (num < 3);
-
-    
-    for (int j = 0; j < 10; j++) { 
-        if (j % 2 == 0) {
-            printf("%d\n", j);
-        }
-    }
-
-    
-
-  
-
-    
-    for (int x = 0; x < 3; x++) {
-        for (int y = 0; y < 2; y++) {
-            printf("%d, %d\n", x, y);
-        }
-    }
-
-
-    return 0; 
+        printf("!");
+    } while (x > 0);
 }

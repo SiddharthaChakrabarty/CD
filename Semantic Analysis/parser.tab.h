@@ -41,15 +41,28 @@
    enum yytokentype {
      KEYWORD = 258,
      IDENTIFIER = 259,
-     CONSTANT = 260,
-     STRING = 261,
+     STRING = 260,
+     CONSTANT = 261,
      LPAREN = 262,
      RPAREN = 263,
      LBRACE = 264,
      RBRACE = 265,
      SEMICOLON = 266,
      COMMA = 267,
-     ASSIGN = 268
+     ASSIGN = 268,
+     LT = 269,
+     GT = 270,
+     LE = 271,
+     GE = 272,
+     EQ = 273,
+     NE = 274,
+     INC = 275,
+     DEC = 276,
+     PLUS = 277,
+     MINUS = 278,
+     MUL = 279,
+     DIV = 280,
+     MOD = 281
    };
 #endif
 
@@ -62,13 +75,14 @@ typedef union YYSTYPE
 /* Line 1676 of yacc.c  */
 #line 38 "parser.y"
 
-    char* str;  // For identifiers and types
-    int intval; // For numeric constants
+    char* strval; // For identifiers and strings
+    int intval;   // For integers (constants)
+    float floatval; // For floating point numbers (if needed)
 
 
 
 /* Line 1676 of yacc.c  */
-#line 72 "parser.tab.h"
+#line 86 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
