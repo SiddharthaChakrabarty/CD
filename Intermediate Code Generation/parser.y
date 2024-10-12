@@ -24,9 +24,11 @@ extern char *yytext; // Declare yytext
 extern int yylineno; // To track line numbers in lexer
 
 int temp_count = 0; // Counter for temporary variables
+int label_count = 0; // Counter for labels
 
 // Function prototypes for temporary variable management
 char* new_temp(); // Function to generate temporary variable names
+char* new_label(); // Function to generate labels for jumps
 
 // Intermediate code generation functions
 void generate_code(const char* operation, const char* operand1, const char* operand2, const char* result);
@@ -36,6 +38,9 @@ void generate_decrement(const char* variable);
 void generate_for_loop(const char* loop_var, const char* limit);
 void generate_while_loop(const char* condition);
 void generate_do_while_loop(const char* condition);
+void generate_cmp(const char* operand1, const char* operand2);
+void generate_jump(const char* label);
+void generate_conditional_jump(const char* condition, const char* label);
 
 %}
 
@@ -43,13 +48,16 @@ void generate_do_while_loop(const char* condition);
     char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.
 }
 
+// Token declarations
 %token <str> PREPROCESSOR PREPROCESSOR_KEYWORD HEADER_FILE FUNCTION  
 %token <str> KEYWORD IDENTIFIER VALUE STRING_LITERAL  
 %token <str> ASSIGNMENT_OPERATOR SPECIAL_SYMBOL TERMINATOR_SYMBOL COMMA  
 %token <str> OPEN_BRACE CLOSE_BRACE OPEN_PARENTHESIS CLOSE_PARENTHESIS  
-%token <str> PLUS_OPERATOR MINUS_OPERATOR INCREMENT_OPERATOR DECREMENT_OPERATOR  
+%token <str> PLUS_OPERATOR MINUS_OPERATOR MULTIPLY_OPERATOR DIVIDE_OPERATOR  
+%token <str> INCREMENT_OPERATOR DECREMENT_OPERATOR  
 %token <str> FOR WHILE DO UNKNOWN_SYMBOL
 
+// Define types for grammar rules
 %type <str> program preprocessor_statement function_definition declarations declaration_list variable_declaration statement_list statement loop_statement for_loop_statement for_initialization condition for_update arithmetic_expression while_loop_statement do_while_statement function_call_statement expression_statement
 
 %% 
@@ -117,8 +125,17 @@ loop_statement:
 for_loop_statement:  
     FOR OPEN_PARENTHESIS for_initialization TERMINATOR_SYMBOL condition TERMINATOR_SYMBOL for_update CLOSE_PARENTHESIS OPEN_BRACE statement_list CLOSE_BRACE  
     { 
+        char* start_label = new_label(); 
+        char* end_label = new_label(); 
+
+        // Generate the start of the loop
+        printf("%s:\n", start_label);
         generate_for_loop($3, $5); // Use $5 for the condition limit
         printf("Loop body code generation:\n");
+        
+        // Generate the condition check and jump
+        generate_cmp($3, $5); 
+        generate_conditional_jump("JE", end_label); // Jump to end if condition is false
     };
 
 for_initialization:  
@@ -166,22 +183,56 @@ arithmetic_expression:
         char *temp = new_temp();
         generate_code("SUB", $1, $3, temp); // Generate intermediate code for subtraction
         $$ = temp;
+    }
+    | IDENTIFIER MULTIPLY_OPERATOR VALUE  
+    { 
+        printf("Arithmetic expression parsed.\n");
+        char *temp = new_temp();
+        generate_code("MUL", $1, $3, temp); // Generate intermediate code for multiplication
+        $$ = temp;
+    }
+    | IDENTIFIER DIVIDE_OPERATOR VALUE  
+    { 
+        printf("Arithmetic expression parsed.\n");
+        char *temp = new_temp();
+        generate_code("DIV", $1, $3, temp); // Generate intermediate code for division
+        $$ = temp;
     };  
 
 while_loop_statement:  
     WHILE OPEN_PARENTHESIS condition CLOSE_PARENTHESIS OPEN_BRACE statement_list CLOSE_BRACE  
     { 
+        char* start_label = new_label(); 
+        char* end_label = new_label(); 
+
+        printf("%s:\n", start_label);
         generate_while_loop($3); // Generate while loop with condition
-        // Generate code for the loop body
+        
+        // Generate the condition check and jump
+        generate_cmp($1, $3); 
+        generate_conditional_jump("JE", end_label); // Jump to end if condition is false
+
+        // Loop body
         printf("Loop body code generation:\n");
+        printf("%s:\n", end_label);
     };  
 
 do_while_statement:  
     DO OPEN_BRACE statement_list CLOSE_BRACE WHILE OPEN_PARENTHESIS condition CLOSE_PARENTHESIS TERMINATOR_SYMBOL  
     { 
+        char* start_label = new_label(); 
+        char* end_label = new_label(); 
+
+        printf("%s:\n", start_label);
         generate_do_while_loop($6); // Generate do-while loop with condition
-        // Generate code for the loop body
+        
+        // Generate the condition check and jump
+        generate_cmp($1, $6); 
+        generate_conditional_jump("JE", end_label); // Jump to end if condition is false
+
+        // Loop body
         printf("Loop body code generation:\n");
+        printf("%s:\n", end_label);
     };  
 
 function_call_statement:  
@@ -210,100 +261,76 @@ expression_statement:
         printf("Function call encountered!\n"); 
     };  
 
-%%  
+%%
 
-int main(int argc, char *argv[]) {  
-    if (argc < 2) { // Check if the filename is provided
-        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
-        return 1;  
-    }
-
-    FILE *file = fopen(argv[1], "r"); // Open the file using the provided filename
-    if (!file) {         
-        perror("Failed to open input file");         
-        return 1;  
-    }      
-
-    yyin = file;  
-    yyparse();  
-    fclose(file);  
-
-    return 0;  
-}  
-
+// Temporary variable management
 char* new_temp() {  
-    char *temp_var_name = malloc(10);     
-    snprintf(temp_var_name, 10, "t%d", temp_count++);     
-    return temp_var_name;  
+    char* temp = (char*)malloc(10);  
+    sprintf(temp, "t%d", temp_count++);  
+    return temp;  
 }  
 
+char* new_label() {  
+    char* label = (char*)malloc(10);  
+    sprintf(label, "L%d", label_count++);  
+    return label;  
+}
+
+// Intermediate code generation functions
 void generate_code(const char* operation, const char* operand1, const char* operand2, const char* result) {  
-    printf("%s %s, %s -> %s\n", operation, operand1, operand2, result);  
+    printf("Intermediate Code: %s %s, %s -> %s\n", operation, operand1, operand2, result);  
 }  
 
 void generate_assignment(const char* variable, const char* value) {  
-    printf("MOV %s, %s\n", variable, value);  
+    printf("Intermediate Code: %s = %s\n", variable, value);  
 }  
 
 void generate_increment(const char* variable) {  
-    printf("INC %s\n", variable);  
+    char* temp = new_temp();  
+    printf("Intermediate Code: %s = %s + 1\n", temp, variable);  
 }  
 
 void generate_decrement(const char* variable) {  
-    printf("DEC %s\n", variable);  
+    char* temp = new_temp();  
+    printf("Intermediate Code: %s = %s - 1\n", temp, variable);  
 }  
 
 void generate_for_loop(const char* loop_var, const char* limit) {  
-    char label_condition[20], label_body[20], label_end[20];
-    snprintf(label_condition, sizeof(label_condition), "label_for_condition");
-    snprintf(label_body, sizeof(label_body), "label_for_body");
-    snprintf(label_end, sizeof(label_end), "label_for_end");
-
-    printf("%s:\n", label_condition);  
-    printf("CMP %s, %s\n", loop_var, limit);  
-    printf("JLT %s\n", label_body);  
-    printf("JMP %s\n", label_end);  
-
-    printf("%s:\n", label_body);  
-    printf("CALL printf(\"For loop\\n\");\n");  
-    printf("INC %s\n", loop_var);  
-    printf("JMP %s\n", label_condition);  
-
-    printf("%s:\n", label_end);  
+    printf("For loop variable: %s, Limit: %s\n", loop_var, limit);  
 }  
 
 void generate_while_loop(const char* condition) {  
-    char label_condition[20], label_body[20], label_end[20];
-    snprintf(label_condition, sizeof(label_condition), "label_while_condition");
-    snprintf(label_body, sizeof(label_body), "label_while_body");
-    snprintf(label_end, sizeof(label_end), "label_while_end");
-
-    printf("%s:\n", label_condition);  
-    printf("CMP %s, 0\n", condition);  
-    printf("JE %s\n", label_end);  
-
-    printf("%s:\n", label_body);  
-    printf("CALL printf(\"While loop\\n\");\n");  
-    printf("JMP %s\n", label_condition);  
-
-    printf("%s:\n", label_end);  
+    printf("While loop condition: %s\n", condition);  
 }  
 
 void generate_do_while_loop(const char* condition) {  
-    char label_body[20], label_end[20];
-    snprintf(label_body, sizeof(label_body), "label_do_while_body");
-    snprintf(label_end, sizeof(label_end), "label_do_while_end");
-
-    printf("%s:\n", label_body);  
-    printf("CALL printf(\"Do while loop\\n\");\n");  
-    printf("CMP %s, 0\n", condition);  
-    printf("JE %s\n", label_end);  
-    printf("JMP %s\n", label_body);  
-
-    printf("%s:\n", label_end);  
+    printf("Do-while loop condition: %s\n", condition);  
 }  
+
+void generate_cmp(const char* operand1, const char* operand2) {  
+    printf("Intermediate Code: CMP %s, %s\n", operand1, operand2);  
+}  
+
+void generate_jump(const char* label) {  
+    printf("Intermediate Code: JMP %s\n", label);  
+}  
+
+void generate_conditional_jump(const char* condition, const char* label) {  
+    printf("Intermediate Code: %s %s\n", condition, label);  
+}  
+
+int main(int argc, char** argv) {
+    yyin = fopen(argv[1], "r");
+    if (!yyin) {
+        perror("Failed to open file");
+        return 1;
+    }
+    yyparse();
+    fclose(yyin);
+    return 0;
+}
 
 int yyerror(const char *s) {  
-    fprintf(stderr, "Error: %s at line %d\n", s, yylineno);  
+    fprintf(stderr, "Error: %s\n", s);  
     return 0;  
-}  
+}

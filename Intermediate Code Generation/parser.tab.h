@@ -57,12 +57,14 @@
      CLOSE_PARENTHESIS = 273,
      PLUS_OPERATOR = 274,
      MINUS_OPERATOR = 275,
-     INCREMENT_OPERATOR = 276,
-     DECREMENT_OPERATOR = 277,
-     FOR = 278,
-     WHILE = 279,
-     DO = 280,
-     UNKNOWN_SYMBOL = 281
+     MULTIPLY_OPERATOR = 276,
+     DIVIDE_OPERATOR = 277,
+     INCREMENT_OPERATOR = 278,
+     DECREMENT_OPERATOR = 279,
+     FOR = 280,
+     WHILE = 281,
+     DO = 282,
+     UNKNOWN_SYMBOL = 283
    };
 #endif
 
@@ -73,14 +75,14 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 42 "parser.y"
+#line 47 "parser.y"
 
     char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.
 
 
 
 /* Line 1676 of yacc.c  */
-#line 84 "parser.tab.h"
+#line 86 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
