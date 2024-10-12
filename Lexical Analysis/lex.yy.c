@@ -412,9 +412,9 @@ static char *yy_last_accepting_cpos;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "loops.l"
+#line 1 "lexer.l"
 #define INITIAL 0
-#line 2 "loops.l"
+#line 2 "lexer.l"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -628,7 +628,7 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 66 "loops.l"
+#line 66 "lexer.l"
 
 
 
@@ -717,159 +717,159 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 69 "loops.l"
+#line 69 "lexer.l"
 {
     add_token(keywords, &keyword_count, "#include");
 }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 73 "loops.l"
+#line 73 "lexer.l"
 {
     add_token(keywords, &keyword_count, "<stdio.h>");
 }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 80 "loops.l"
+#line 80 "lexer.l"
 {
     add_token(keywords, &keyword_count, yytext);
 }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 86 "loops.l"
+#line 86 "lexer.l"
 {
     add_token(identifiers, &identifier_count, yytext);
 }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 93 "loops.l"
+#line 93 "lexer.l"
 { add_token(punctuations, &punctuation_count, yytext); }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 94 "loops.l"
+#line 94 "lexer.l"
 { add_token(punctuations, &punctuation_count, yytext); }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 95 "loops.l"
+#line 95 "lexer.l"
 { add_token(punctuations, &punctuation_count, yytext); }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 96 "loops.l"
+#line 96 "lexer.l"
 { add_token(punctuations, &punctuation_count, yytext); }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 97 "loops.l"
+#line 97 "lexer.l"
 { add_token(punctuations, &punctuation_count, yytext); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 98 "loops.l"
+#line 98 "lexer.l"
 { add_token(punctuations, &punctuation_count, yytext); }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 101 "loops.l"
+#line 101 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 102 "loops.l"
+#line 102 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 103 "loops.l"
+#line 103 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 104 "loops.l"
+#line 104 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 105 "loops.l"
+#line 105 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 106 "loops.l"
+#line 106 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 107 "loops.l"
+#line 107 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 108 "loops.l"
+#line 108 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 109 "loops.l"
+#line 109 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 110 "loops.l"
+#line 110 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 111 "loops.l"
+#line 111 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 112 "loops.l"
+#line 112 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 113 "loops.l"
+#line 113 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 114 "loops.l"
+#line 114 "lexer.l"
 { add_token(operators, &operator_count, yytext); }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 117 "loops.l"
+#line 117 "lexer.l"
 {
     add_token(constants, &constant_count, yytext);
 }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 122 "loops.l"
+#line 122 "lexer.l"
 {
     add_token(strings, &string_count, yytext);
 }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 126 "loops.l"
+#line 126 "lexer.l"
 ;  
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 129 "loops.l"
+#line 129 "lexer.l"
 { /* Ignore any unknown characters for now */ }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 131 "loops.l"
+#line 131 "lexer.l"
 ECHO;
 	YY_BREAK
 #line 876 "lex.yy.c"
@@ -1758,7 +1758,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 131 "loops.l"
+#line 131 "lexer.l"
 
 
 // End of lexer
@@ -1784,9 +1784,9 @@ int main(int argc, char **argv) {
     yylex(); // Start the lexical analysis
     fclose(inputFile);
 
-    printf("=== Lexical Analysis Results ===\n");
+    printf("\n=== Lexical Analysis Results ===\n");
     print_tokens_side_by_side(); // Print all tokens side by side
-    printf("===============================\n");
+    printf("===============================\n\n");
 
     return 0;
 }

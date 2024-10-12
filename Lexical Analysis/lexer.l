@@ -153,9 +153,9 @@ int main(int argc, char **argv) {
     yylex(); // Start the lexical analysis
     fclose(inputFile);
 
-    printf("=== Lexical Analysis Results ===\n");
+    printf("\n=== Lexical Analysis Results ===\n");
     print_tokens_side_by_side(); // Print all tokens side by side
-    printf("===============================\n");
+    printf("===============================\n\n");
 
     return 0;
 }
