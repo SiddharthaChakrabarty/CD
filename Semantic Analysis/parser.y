@@ -209,8 +209,13 @@ expression_statement:
 
 %%  
 
-int main(void) {  
-    FILE *file = fopen("test.txt", "r");     
+int main(int argc, char *argv[]) {  
+    if (argc < 2) {  
+        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+        return 1;  
+    }
+
+    FILE *file = fopen(argv[1], "r");     
     if (!file) {         
         perror("Failed to open input file");         
         return 1;  
