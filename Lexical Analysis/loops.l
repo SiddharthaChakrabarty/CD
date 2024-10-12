@@ -66,14 +66,28 @@ void print_tokens_side_by_side() {
 %%
 
 
-"for"|"while"|"do"|"int"|"float"|"double"|"char" {
+"#include" {
+    add_token(keywords, &keyword_count, "#include");
+}
+
+"<stdio.h>" {
+    add_token(keywords, &keyword_count, "<stdio.h>");
+}
+
+
+
+
+"void"|"main"|"for"|"while"|"do"|"int"|"float"|"double"|"char" {
     add_token(keywords, &keyword_count, yytext);
 }
+
 
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     add_token(identifiers, &identifier_count, yytext);
 }
+
+
 
 
 "(" { add_token(punctuations, &punctuation_count, yytext); }
@@ -109,8 +123,8 @@ void print_tokens_side_by_side() {
     add_token(strings, &string_count, yytext);
 }
 
-
 [ \t\n]+ ;  
+
 
 . { /* Ignore any unknown characters for now */ }
 
