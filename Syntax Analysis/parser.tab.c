@@ -85,9 +85,8 @@ struct node {
 
 // Function prototypes
 struct node* mknode(struct node *left, struct node *right, const char *token, const char *code);
-void printtree(struct node *tree);
-void printInorder(struct node *tree, int depth);
-int yylex(void);
+void printtree(struct node *tree, int level);
+int yylex(void); // Declare yylex
 int yyerror(const char *s);
 extern FILE *yyin;
 
@@ -97,7 +96,7 @@ int nodeCounter = 1; // Counter for unique node IDs
 
 
 /* Line 189 of yacc.c  */
-#line 101 "parser.tab.c"
+#line 100 "parser.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -158,7 +157,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 28 "parser.y"
+#line 27 "parser.y"
 
     struct node* nd;   // Parse tree node
     char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.
@@ -166,7 +165,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 170 "parser.tab.c"
+#line 169 "parser.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -178,7 +177,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 182 "parser.tab.c"
+#line 181 "parser.tab.c"
 
 #ifdef short
 # undef short
@@ -400,7 +399,7 @@ union yyalloc
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  19
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  31
+#define YYNRULES  32
 /* YYNRULES -- Number of states.  */
 #define YYNSTATES  91
 
@@ -453,7 +452,7 @@ static const yytype_uint8 yyprhs[] =
        0,     0,     3,     6,    12,    21,    25,    27,    31,    35,
       37,    39,    42,    44,    46,    48,    50,    52,    54,    66,
       70,    74,    77,    80,    84,    88,    92,   100,   110,   116,
-     121,   125
+     121,   125,   129
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
@@ -471,16 +470,17 @@ static const yytype_int8 yyrhs[] =
        9,    -1,    24,    17,    39,    18,    15,    34,    16,    -1,
       25,    15,    34,    16,    24,    17,    39,    18,    13,    -1,
        6,    17,    10,    18,    13,    -1,     8,    11,     9,    13,
-      -1,     8,    21,    13,    -1,     8,    22,    13,    -1
+      -1,     8,    21,    13,    -1,     8,    22,    13,    -1,     6,
+      17,    10,    18,    13,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    45,    45,    52,    59,    66,    73,    74,    80,    86,
-      94,    95,   101,   102,   103,   107,   108,   109,   113,   120,
-     129,   138,   145,   151,   160,   166,   174,   181,   188,   197,
-     203,   209
+       0,    44,    44,    51,    58,    65,    72,    73,    79,    85,
+      92,    93,    99,   100,   101,   105,   106,   107,   111,   118,
+     127,   136,   143,   149,   158,   164,   172,   179,   187,   196,
+     202,   208,   214
 };
 #endif
 
@@ -522,7 +522,7 @@ static const yytype_uint8 yyr1[] =
        0,    27,    28,    29,    30,    31,    32,    32,    33,    33,
       34,    34,    35,    35,    35,    36,    36,    36,    37,    38,
       39,    40,    40,    40,    41,    41,    42,    43,    44,    45,
-      45,    45
+      45,    45,    45
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
@@ -531,7 +531,7 @@ static const yytype_uint8 yyr2[] =
        0,     2,     2,     5,     8,     3,     1,     3,     3,     1,
        1,     2,     1,     1,     1,     1,     1,     1,    11,     3,
        3,     2,     2,     3,     3,     3,     7,     9,     5,     4,
-       3,     3
+       3,     3,     5
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -1442,7 +1442,7 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 46 "parser.y"
+#line 45 "parser.y"
     { 
         (yyval.nd) = mknode((yyvsp[(1) - (2)].nd), (yyvsp[(2) - (2)].nd), "program", "Program Structure"); 
         head = (yyval.nd); 
@@ -1452,7 +1452,7 @@ yyreduce:
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 53 "parser.y"
+#line 52 "parser.y"
     { 
         printf("Preprocessor directive parsed successfully!\n"); 
         (yyval.nd) = mknode(NULL, NULL, "Preprocessor", "Preprocessor directive");
@@ -1462,7 +1462,7 @@ yyreduce:
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 60 "parser.y"
+#line 59 "parser.y"
     { 
         printf("Function definition processed correctly!\n"); 
         (yyval.nd) = mknode((yyvsp[(6) - (8)].nd), (yyvsp[(7) - (8)].nd), "Function", "Function definition");
@@ -1472,7 +1472,7 @@ yyreduce:
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 67 "parser.y"
+#line 66 "parser.y"
     { 
         printf("Variables declared and initialized.\n"); 
         (yyval.nd) = mknode((yyvsp[(2) - (3)].nd), NULL, "Declarations", "Declarations");
@@ -1482,7 +1482,7 @@ yyreduce:
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 75 "parser.y"
+#line 74 "parser.y"
     { 
         (yyval.nd) = mknode((yyvsp[(1) - (3)].nd), (yyvsp[(3) - (3)].nd), "Declaration_List", "Declaration List");
     ;}
@@ -1491,29 +1491,28 @@ yyreduce:
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 81 "parser.y"
+#line 80 "parser.y"
     { 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str));
-        (yyval.nd) = mknode(NULL, NULL, "Var_Declaration", strdup(buffer));
+        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure initialization is captured
+        (yyval.nd) = mknode(NULL, NULL, "Var_Declaration", strdup(buffer)); // Ensure proper representation
     ;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 87 "parser.y"
+#line 86 "parser.y"
     { 
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s", (yyvsp[(1) - (1)].str));
-        (yyval.nd) = mknode(NULL, NULL, "Var_Declaration", strdup(buffer));
+        // Directly return the variable name without initialization
+        (yyval.nd) = mknode(NULL, NULL, "Var_Declaration", strdup((yyvsp[(1) - (1)].str))); 
     ;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 96 "parser.y"
+#line 94 "parser.y"
     { 
         (yyval.nd) = mknode((yyvsp[(1) - (2)].nd), (yyvsp[(2) - (2)].nd), "Statements", "Statement List");
     ;}
@@ -1522,21 +1521,21 @@ yyreduce:
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 114 "parser.y"
+#line 112 "parser.y"
     { 
         printf("For loop parsed successfully!\n"); 
-        (yyval.nd) = mknode((yyvsp[(3) - (11)].nd), mknode((yyvsp[(5) - (11)].nd), (yyvsp[(7) - (11)].nd), "For_Update", "For Update"), "For_Loop", "For Loop");
+        (yyval.nd) = mknode(mknode((yyvsp[(3) - (11)].nd), mknode((yyvsp[(5) - (11)].nd), (yyvsp[(7) - (11)].nd), "For_Update", "For Update"), "For_Loop", "For Loop"), NULL, "For_Loop", "For Loop Body");
     ;}
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 121 "parser.y"
+#line 119 "parser.y"
     { 
         printf("For loop initialization parsed.\n"); 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str));
+        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Correct handling
         (yyval.nd) = mknode(NULL, NULL, "For_Initialization", strdup(buffer));
     ;}
     break;
@@ -1544,19 +1543,19 @@ yyreduce:
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 130 "parser.y"
+#line 128 "parser.y"
     { 
         printf("Condition parsed.\n"); 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s %s %s", (yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].str), (yyvsp[(3) - (3)].str));
-        (yyval.nd) = mknode(NULL, NULL, "Condition", strdup(buffer));
+        snprintf(buffer, sizeof(buffer), "%s %s %s", (yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct condition representation
+        (yyval.nd) = mknode(NULL, NULL, "Condition", strdup(buffer)); // Ensure this returns a node
     ;}
     break;
 
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 139 "parser.y"
+#line 137 "parser.y"
     { 
         printf("For loop update parsed.\n"); 
         char buffer[100];
@@ -1568,7 +1567,7 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 146 "parser.y"
+#line 144 "parser.y"
     { 
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s--", (yyvsp[(1) - (2)].str));
@@ -1579,11 +1578,11 @@ yyreduce:
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 152 "parser.y"
+#line 150 "parser.y"
     { 
         printf("For loop update parsed.\n");
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].nd));
+        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].nd)); // Assume arithmetic_expression returns a valid string
         (yyval.nd) = mknode(NULL, NULL, "For_Update", strdup(buffer));
     ;}
     break;
@@ -1591,10 +1590,10 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 161 "parser.y"
+#line 159 "parser.y"
     { 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s + %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str));
+        snprintf(buffer, sizeof(buffer), "%s + %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
         (yyval.nd) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
     ;}
     break;
@@ -1602,10 +1601,10 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 167 "parser.y"
+#line 165 "parser.y"
     { 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s - %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str));
+        snprintf(buffer, sizeof(buffer), "%s - %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
         (yyval.nd) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
     ;}
     break;
@@ -1613,7 +1612,7 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 175 "parser.y"
+#line 173 "parser.y"
     { 
         printf("While loop parsed successfully!\n"); 
         (yyval.nd) = mknode((yyvsp[(3) - (7)].nd), (yyvsp[(6) - (7)].nd), "While_Loop", "While Loop");
@@ -1623,21 +1622,22 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 182 "parser.y"
+#line 180 "parser.y"
     { 
         printf("Do-while loop parsed successfully!\n"); 
-        (yyval.nd) = mknode((yyvsp[(3) - (9)].nd), (yyvsp[(6) - (9)].str), "Do_While_Loop", "Do While Loop");
+        struct node *bodyNode = mknode((yyvsp[(3) - (9)].nd), NULL, "Do_While_Body", "Do While Body");
+        (yyval.nd) = mknode(bodyNode, (yyvsp[(6) - (9)].str), "Do_While_Loop", "Do While Loop");
     ;}
     break;
 
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 189 "parser.y"
+#line 188 "parser.y"
     { 
         printf("Function call encountered!\n"); 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "printf(%s)", (yyvsp[(3) - (5)].str));
+        snprintf(buffer, sizeof(buffer), "printf(%s)", (yyvsp[(3) - (5)].str)); // Assume STRING_LITERAL is valid
         (yyval.nd) = mknode(NULL, NULL, "Function_Call", strdup(buffer));
     ;}
     break;
@@ -1645,10 +1645,10 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 198 "parser.y"
+#line 197 "parser.y"
     { 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str));
+        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str)); // Correct handling
         (yyval.nd) = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
     ;}
     break;
@@ -1656,7 +1656,7 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 204 "parser.y"
+#line 203 "parser.y"
     { 
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s++", (yyvsp[(1) - (3)].str));
@@ -1667,7 +1667,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 210 "parser.y"
+#line 209 "parser.y"
     { 
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s--", (yyvsp[(1) - (3)].str));
@@ -1675,10 +1675,21 @@ yyreduce:
     ;}
     break;
 
+  case 32:
+
+/* Line 1455 of yacc.c  */
+#line 215 "parser.y"
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "printf(%s)", (yyvsp[(3) - (5)].str)); // Assume STRING_LITERAL is valid
+        (yyval.nd) = mknode(NULL, NULL, "Function_Call", strdup(buffer));
+    ;}
+    break;
+
 
 
 /* Line 1455 of yacc.c  */
-#line 1682 "parser.tab.c"
+#line 1693 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1890,7 +1901,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 216 "parser.y"
+#line 221 "parser.y"
   
 
 int main(void) {  
@@ -1902,36 +1913,43 @@ int main(void) {
     yyin = file;  
     yyparse();  
     fclose(file);  
-    
-    // Print the parse tree after parsing
-    printf("\n\nParse Tree Inorder Traversal:\n");
-    printtree(head);
-    
-    return 0;  
-}  
 
-int yyerror(const char *s) {     
-    fprintf(stderr, "Syntax error detected: %s\n", s);     
+    printf("\n=== Parse Tree ===\n\n");
+    printtree(head, 0); // Start with level 0
     return 0;  
 }
 
-// Create a new node for the parse tree
 struct node* mknode(struct node *left, struct node *right, const char *token, const char *code) {
-    struct node *newnode = (struct node*)malloc(sizeof(struct node));
-    newnode->left = left;
-    newnode->right = right;
-    newnode->token = strdup(token); // Allocate and copy token string
-    newnode->code = strdup(code);   // Allocate and copy code string
-    newnode->id = nodeCounter++;
-    return newnode;
+    struct node *new_node = (struct node *)malloc(sizeof(struct node));
+    new_node->left = left;
+    new_node->right = right;
+    new_node->token = strdup(token);
+    new_node->code = strdup(code);
+    new_node->id = nodeCounter++; // Assign a unique ID
+    return new_node;
 }
 
-// Print the parse tree in Inorder
-void printtree(struct node *tree) {
-    if (tree != NULL) {
-        printtree(tree->left);
-        printf("  Node ID: %d, Token: %s, Code: %s\n", tree->id, tree->token, tree->code);
-        printtree(tree->right);
+void printtree(struct node *tree, int level) {
+    if (!tree) return;
+
+    // Print the current node's details with indentation based on its level in the tree
+    for (int i = 0; i < level; i++) {
+        printf("    "); // Indentation
     }
+
+    printf("Node ID: %d\n", tree->id);
+    for (int i = 0; i < level; i++) {
+        printf("    "); // Indentation
+    }
+    printf("Token: %-20s Code: %s\n", tree->token, tree->code);
+
+    // Recursively print left and right children
+    printtree(tree->left, level + 1);
+    printtree(tree->right, level + 1);
+}
+
+int yyerror(const char *s) {
+    fprintf(stderr, "Parse error: %s\n", s);
+    return 0;
 }
 

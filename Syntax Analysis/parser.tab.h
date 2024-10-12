@@ -73,7 +73,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 28 "parser.y"
+#line 27 "parser.y"
 
     struct node* nd;   // Parse tree node
     char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.

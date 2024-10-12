@@ -1,10 +1,12 @@
 %{
 #include "parser.tab.h"
+#include <stdlib.h>
+#include <string.h>
 %}
 
 %%
 
-"for"                           { return FOR; }
+"for"                           { return FOR; } 
 "while"                         { return WHILE; }
 "do"                            { return DO; }
 [#]                             { return PREPROCESSOR; }
@@ -13,14 +15,14 @@
 "main"                          { return FUNCTION; }
 "printf"                        { return FUNCTION; }
 "void"|"int"                    { return KEYWORD; }
-"x"|"y"|"z"                     { return IDENTIFIER; }
-[0-9]+                          { return VALUE; }
+[a-zA-Z_][a-zA-Z0-9_]*          { yylval.str = strdup(yytext); return IDENTIFIER; }       
+[0-9]+                          { yylval.str = strdup(yytext); return VALUE; }
 [{]                             { return OPEN_BRACE; }
 [}]                             { return CLOSE_BRACE; }
 [(]                             { return OPEN_PARENTHESIS; }
 [)]                             { return CLOSE_PARENTHESIS; }
 [<|>]                           { return SPECIAL_SYMBOL; }
-"\""([^\"\n]+)"\""              { return STRING_LITERAL; }
+"\""([^\"\n]+)"\""              { yylval.str = strdup(yytext); return STRING_LITERAL; }
 "="                             { return ASSIGNMENT_OPERATOR; }
 "++"                            { return INCREMENT_OPERATOR; }
 "--"                            { return DECREMENT_OPERATOR; }

@@ -14,9 +14,8 @@ struct node {
 
 // Function prototypes
 struct node* mknode(struct node *left, struct node *right, const char *token, const char *code);
-void printtree(struct node *tree);
-void printInorder(struct node *tree, int depth);
-int yylex(void);
+void printtree(struct node *tree, int level);
+int yylex(void); // Declare yylex
 int yyerror(const char *s);
 extern FILE *yyin;
 
@@ -80,14 +79,13 @@ variable_declaration:
     IDENTIFIER ASSIGNMENT_OPERATOR VALUE
     { 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3);
-        $$ = mknode(NULL, NULL, "Var_Declaration", strdup(buffer));
+        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3); // Ensure initialization is captured
+        $$ = mknode(NULL, NULL, "Var_Declaration", strdup(buffer)); // Ensure proper representation
     }
     | IDENTIFIER 
     { 
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s", $1);
-        $$ = mknode(NULL, NULL, "Var_Declaration", strdup(buffer));
+        // Directly return the variable name without initialization
+        $$ = mknode(NULL, NULL, "Var_Declaration", strdup($1)); 
     }; 
 
 statement_list:  
@@ -113,7 +111,7 @@ for_loop_statement:
     FOR OPEN_PARENTHESIS for_initialization TERMINATOR_SYMBOL condition TERMINATOR_SYMBOL for_update CLOSE_PARENTHESIS OPEN_BRACE statement_list CLOSE_BRACE  
     { 
         printf("For loop parsed successfully!\n"); 
-        $$ = mknode($3, mknode($5, $7, "For_Update", "For Update"), "For_Loop", "For Loop");
+        $$ = mknode(mknode($3, mknode($5, $7, "For_Update", "For Update"), "For_Loop", "For Loop"), NULL, "For_Loop", "For Loop Body");
     };  
 
 for_initialization:  
@@ -121,7 +119,7 @@ for_initialization:
     { 
         printf("For loop initialization parsed.\n"); 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3);
+        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3); // Correct handling
         $$ = mknode(NULL, NULL, "For_Initialization", strdup(buffer));
     };  
 
@@ -130,8 +128,8 @@ condition:
     { 
         printf("Condition parsed.\n"); 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s %s %s", $1, $2, $3);
-        $$ = mknode(NULL, NULL, "Condition", strdup(buffer));
+        snprintf(buffer, sizeof(buffer), "%s %s %s", $1, $2, $3); // Ensure correct condition representation
+        $$ = mknode(NULL, NULL, "Condition", strdup(buffer)); // Ensure this returns a node
     };  
 
 for_update:  
@@ -152,7 +150,7 @@ for_update:
     { 
         printf("For loop update parsed.\n");
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3);
+        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3); // Assume arithmetic_expression returns a valid string
         $$ = mknode(NULL, NULL, "For_Update", strdup(buffer));
     };  
 
@@ -160,13 +158,13 @@ arithmetic_expression:
     IDENTIFIER PLUS_OPERATOR VALUE  
     { 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s + %s", $1, $3);
+        snprintf(buffer, sizeof(buffer), "%s + %s", $1, $3); // Ensure correct handling
         $$ = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
     }
     | IDENTIFIER MINUS_OPERATOR VALUE  
     { 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s - %s", $1, $3);
+        snprintf(buffer, sizeof(buffer), "%s - %s", $1, $3); // Ensure correct handling
         $$ = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
     };  
 
@@ -181,7 +179,8 @@ do_while_statement:
     DO OPEN_BRACE statement_list CLOSE_BRACE WHILE OPEN_PARENTHESIS condition CLOSE_PARENTHESIS TERMINATOR_SYMBOL  
     { 
         printf("Do-while loop parsed successfully!\n"); 
-        $$ = mknode($3, $6, "Do_While_Loop", "Do While Loop");
+        struct node *bodyNode = mknode($3, NULL, "Do_While_Body", "Do While Body");
+        $$ = mknode(bodyNode, $6, "Do_While_Loop", "Do While Loop");
     };  
 
 function_call_statement:  
@@ -189,7 +188,7 @@ function_call_statement:
     { 
         printf("Function call encountered!\n"); 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "printf(%s)", $3);
+        snprintf(buffer, sizeof(buffer), "printf(%s)", $3); // Assume STRING_LITERAL is valid
         $$ = mknode(NULL, NULL, "Function_Call", strdup(buffer));
     };  
 
@@ -197,7 +196,7 @@ expression_statement:
     IDENTIFIER ASSIGNMENT_OPERATOR VALUE TERMINATOR_SYMBOL  
     { 
         char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3);
+        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3); // Correct handling
         $$ = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
     }
     | IDENTIFIER INCREMENT_OPERATOR TERMINATOR_SYMBOL  
@@ -211,6 +210,12 @@ expression_statement:
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s--", $1);
         $$ = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
+    }
+    | FUNCTION OPEN_PARENTHESIS STRING_LITERAL CLOSE_PARENTHESIS TERMINATOR_SYMBOL  
+    { 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "printf(%s)", $3); // Assume STRING_LITERAL is valid
+        $$ = mknode(NULL, NULL, "Function_Call", strdup(buffer));
     };  
 
 %%  
@@ -224,35 +229,42 @@ int main(void) {
     yyin = file;  
     yyparse();  
     fclose(file);  
-    
-    // Print the parse tree after parsing
-    printf("\n\nParse Tree Inorder Traversal:\n");
-    printtree(head);
-    
-    return 0;  
-}  
 
-int yyerror(const char *s) {     
-    fprintf(stderr, "Syntax error detected: %s\n", s);     
+    printf("\n=== Parse Tree ===\n\n");
+    printtree(head, 0); // Start with level 0
     return 0;  
 }
 
-// Create a new node for the parse tree
 struct node* mknode(struct node *left, struct node *right, const char *token, const char *code) {
-    struct node *newnode = (struct node*)malloc(sizeof(struct node));
-    newnode->left = left;
-    newnode->right = right;
-    newnode->token = strdup(token); // Allocate and copy token string
-    newnode->code = strdup(code);   // Allocate and copy code string
-    newnode->id = nodeCounter++;
-    return newnode;
+    struct node *new_node = (struct node *)malloc(sizeof(struct node));
+    new_node->left = left;
+    new_node->right = right;
+    new_node->token = strdup(token);
+    new_node->code = strdup(code);
+    new_node->id = nodeCounter++; // Assign a unique ID
+    return new_node;
 }
 
-// Print the parse tree in Inorder
-void printtree(struct node *tree) {
-    if (tree != NULL) {
-        printtree(tree->left);
-        printf("  Node ID: %d, Token: %s, Code: %s\n", tree->id, tree->token, tree->code);
-        printtree(tree->right);
+void printtree(struct node *tree, int level) {
+    if (!tree) return;
+
+    // Print the current node's details with indentation based on its level in the tree
+    for (int i = 0; i < level; i++) {
+        printf("    "); // Indentation
     }
+
+    printf("Node ID: %d\n", tree->id);
+    for (int i = 0; i < level; i++) {
+        printf("    "); // Indentation
+    }
+    printf("Token: %-20s Code: %s\n", tree->token, tree->code);
+
+    // Recursively print left and right children
+    printtree(tree->left, level + 1);
+    printtree(tree->right, level + 1);
+}
+
+int yyerror(const char *s) {
+    fprintf(stderr, "Parse error: %s\n", s);
+    return 0;
 }
