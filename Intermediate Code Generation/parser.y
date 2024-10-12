@@ -117,10 +117,9 @@ loop_statement:
 for_loop_statement:  
     FOR OPEN_PARENTHESIS for_initialization TERMINATOR_SYMBOL condition TERMINATOR_SYMBOL for_update CLOSE_PARENTHESIS OPEN_BRACE statement_list CLOSE_BRACE  
     { 
-        generate_for_loop($3, "5"); // Generate for loop with condition
-        // Generate code for the loop body
+        generate_for_loop($3, $5); // Use $5 for the condition limit
         printf("Loop body code generation:\n");
-    };  
+    };
 
 for_initialization:  
     IDENTIFIER ASSIGNMENT_OPERATOR VALUE  
@@ -133,8 +132,8 @@ condition:
     IDENTIFIER SPECIAL_SYMBOL VALUE  
     { 
         printf("Condition parsed: %s %s %s\n", $1, $2, $3);
-        $$ = $1; // Set the condition value for further use
-    };  
+        $$ = $3; // Return the value for further use in the loop code generation
+    };
 
 for_update:  
     IDENTIFIER INCREMENT_OPERATOR  

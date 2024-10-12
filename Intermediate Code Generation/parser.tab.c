@@ -492,9 +492,9 @@ static const yytype_int8 yyrhs[] =
 static const yytype_uint8 yyrline[] =
 {
        0,    58,    58,    64,    70,    76,    82,    83,    89,    93,
-      99,   100,   106,   107,   108,   112,   113,   114,   118,   126,
-     133,   140,   145,   150,   157,   164,   173,   181,   189,   195,
-     199,   204,   209
+      99,   100,   106,   107,   108,   112,   113,   114,   118,   125,
+     132,   139,   144,   149,   156,   163,   172,   180,   188,   194,
+     198,   203,   208
 };
 #endif
 
@@ -1530,8 +1530,7 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 119 "parser.y"
     { 
-        generate_for_loop((yyvsp[(3) - (11)].str), "5"); // Generate for loop with condition
-        // Generate code for the loop body
+        generate_for_loop((yyvsp[(3) - (11)].str), (yyvsp[(5) - (11)].str)); // Use $5 for the condition limit
         printf("Loop body code generation:\n");
     ;}
     break;
@@ -1539,7 +1538,7 @@ yyreduce:
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 127 "parser.y"
+#line 126 "parser.y"
     { 
         generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate intermediate code for initialization
         printf("For loop initialization parsed.\n"); 
@@ -1549,17 +1548,17 @@ yyreduce:
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 134 "parser.y"
+#line 133 "parser.y"
     { 
         printf("Condition parsed: %s %s %s\n", (yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].str), (yyvsp[(3) - (3)].str));
-        (yyval.str) = (yyvsp[(1) - (3)].str); // Set the condition value for further use
+        (yyval.str) = (yyvsp[(3) - (3)].str); // Return the value for further use in the loop code generation
     ;}
     break;
 
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 141 "parser.y"
+#line 140 "parser.y"
     { 
         generate_increment((yyvsp[(1) - (2)].str)); // Generate intermediate code for increment
         printf("For loop update parsed.\n"); 
@@ -1569,7 +1568,7 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 146 "parser.y"
+#line 145 "parser.y"
     { 
         generate_decrement((yyvsp[(1) - (2)].str)); // Generate intermediate code for decrement
         printf("For loop update parsed.\n"); 
@@ -1579,7 +1578,7 @@ yyreduce:
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 151 "parser.y"
+#line 150 "parser.y"
     { 
         generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate intermediate code for assignment
         printf("For loop update parsed.\n");
@@ -1589,7 +1588,7 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 158 "parser.y"
+#line 157 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
@@ -1601,7 +1600,7 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 165 "parser.y"
+#line 164 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
@@ -1613,7 +1612,7 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 174 "parser.y"
+#line 173 "parser.y"
     { 
         generate_while_loop((yyvsp[(3) - (7)].str)); // Generate while loop with condition
         // Generate code for the loop body
@@ -1624,7 +1623,7 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 182 "parser.y"
+#line 181 "parser.y"
     { 
         generate_do_while_loop((yyvsp[(6) - (9)].str)); // Generate do-while loop with condition
         // Generate code for the loop body
@@ -1635,7 +1634,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 190 "parser.y"
+#line 189 "parser.y"
     { 
         printf("Function call encountered!\n"); 
     ;}
@@ -1644,7 +1643,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 196 "parser.y"
+#line 195 "parser.y"
     { 
         generate_assignment((yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str)); // Generate intermediate code for assignment
     ;}
@@ -1653,7 +1652,7 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 200 "parser.y"
+#line 199 "parser.y"
     { 
         generate_increment((yyvsp[(1) - (3)].str)); // Generate intermediate code for increment
         printf("Increment operation parsed.\n");
@@ -1663,7 +1662,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 205 "parser.y"
+#line 204 "parser.y"
     { 
         generate_decrement((yyvsp[(1) - (3)].str)); // Generate intermediate code for decrement
         printf("Decrement operation parsed.\n");
@@ -1673,7 +1672,7 @@ yyreduce:
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 210 "parser.y"
+#line 209 "parser.y"
     { 
         printf("Function call encountered!\n"); 
     ;}
@@ -1682,7 +1681,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 1686 "parser.tab.c"
+#line 1685 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1894,15 +1893,21 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 214 "parser.y"
+#line 213 "parser.y"
   
 
-int main(void) {  
-    FILE *file = fopen("test.txt", "r");     
+int main(int argc, char *argv[]) {  
+    if (argc < 2) { // Check if the filename is provided
+        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+        return 1;  
+    }
+
+    FILE *file = fopen(argv[1], "r"); // Open the file using the provided filename
     if (!file) {         
         perror("Failed to open input file");         
         return 1;  
     }      
+
     yyin = file;  
     yyparse();  
     fclose(file);  
