@@ -39,30 +39,30 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     KEYWORD = 258,
-     IDENTIFIER = 259,
-     STRING = 260,
-     CONSTANT = 261,
-     LPAREN = 262,
-     RPAREN = 263,
-     LBRACE = 264,
-     RBRACE = 265,
-     SEMICOLON = 266,
-     COMMA = 267,
-     ASSIGN = 268,
-     LT = 269,
-     GT = 270,
-     LE = 271,
-     GE = 272,
-     EQ = 273,
-     NE = 274,
-     INC = 275,
-     DEC = 276,
-     PLUS = 277,
-     MINUS = 278,
-     MUL = 279,
-     DIV = 280,
-     MOD = 281
+     PREPROCESSOR = 258,
+     PREPROCESSOR_KEYWORD = 259,
+     HEADER_FILE = 260,
+     FUNCTION = 261,
+     KEYWORD = 262,
+     IDENTIFIER = 263,
+     VALUE = 264,
+     STRING_LITERAL = 265,
+     ASSIGNMENT_OPERATOR = 266,
+     SPECIAL_SYMBOL = 267,
+     TERMINATOR_SYMBOL = 268,
+     COMMA = 269,
+     OPEN_BRACE = 270,
+     CLOSE_BRACE = 271,
+     OPEN_PARENTHESIS = 272,
+     CLOSE_PARENTHESIS = 273,
+     PLUS_OPERATOR = 274,
+     MINUS_OPERATOR = 275,
+     INCREMENT_OPERATOR = 276,
+     DECREMENT_OPERATOR = 277,
+     FOR = 278,
+     WHILE = 279,
+     DO = 280,
+     UNKNOWN_SYMBOL = 281
    };
 #endif
 
@@ -73,16 +73,14 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 38 "parser.y"
+#line 44 "parser.y"
 
-    char* strval; // For identifiers and strings
-    int intval;   // For integers (constants)
-    float floatval; // For floating point numbers (if needed)
+    char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.
 
 
 
 /* Line 1676 of yacc.c  */
-#line 86 "parser.tab.h"
+#line 84 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
