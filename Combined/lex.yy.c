@@ -402,9 +402,9 @@ static char *yy_last_accepting_cpos;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 ".\\lexer.l"
+#line 1 "lexer.l"
 #define INITIAL 0
-#line 2 ".\\lexer.l"
+#line 2 "lexer.l"
 #include "parser.tab.h"
 #include <stdlib.h>
 #include <string.h>
@@ -560,7 +560,7 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 8 ".\\lexer.l"
+#line 8 "lexer.l"
 
 
 #line 567 "lex.yy.c"
@@ -648,156 +648,156 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 10 ".\\lexer.l"
+#line 10 "lexer.l"
 { yylineno++; } 
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 11 ".\\lexer.l"
+#line 11 "lexer.l"
 { return FOR; } 
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 12 ".\\lexer.l"
+#line 12 "lexer.l"
 { return WHILE; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 13 ".\\lexer.l"
+#line 13 "lexer.l"
 { return DO; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 14 ".\\lexer.l"
+#line 14 "lexer.l"
 { return PREPROCESSOR; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 15 ".\\lexer.l"
+#line 15 "lexer.l"
 { return PREPROCESSOR_KEYWORD; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 16 ".\\lexer.l"
+#line 16 "lexer.l"
 { return HEADER_FILE; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 17 ".\\lexer.l"
+#line 17 "lexer.l"
 { return FUNCTION; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 18 ".\\lexer.l"
+#line 18 "lexer.l"
 { return FUNCTION; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 19 ".\\lexer.l"
+#line 19 "lexer.l"
 { return KEYWORD; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 20 ".\\lexer.l"
+#line 20 "lexer.l"
 { yylval.str = strdup(yytext); return IDENTIFIER; }       
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 21 ".\\lexer.l"
+#line 21 "lexer.l"
 { yylval.str = strdup(yytext); return VALUE; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 22 ".\\lexer.l"
+#line 22 "lexer.l"
 { return OPEN_BRACE; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 23 ".\\lexer.l"
+#line 23 "lexer.l"
 { return CLOSE_BRACE; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 24 ".\\lexer.l"
+#line 24 "lexer.l"
 { return OPEN_PARENTHESIS; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 25 ".\\lexer.l"
+#line 25 "lexer.l"
 { return CLOSE_PARENTHESIS; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 26 ".\\lexer.l"
+#line 26 "lexer.l"
 { return SPECIAL_SYMBOL; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 27 ".\\lexer.l"
+#line 27 "lexer.l"
 { yylval.str = strdup(yytext); return STRING_LITERAL; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 28 ".\\lexer.l"
+#line 28 "lexer.l"
 { return ASSIGNMENT_OPERATOR; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 29 ".\\lexer.l"
+#line 29 "lexer.l"
 { return INCREMENT_OPERATOR; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 30 ".\\lexer.l"
+#line 30 "lexer.l"
 { return DECREMENT_OPERATOR; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 31 ".\\lexer.l"
+#line 31 "lexer.l"
 { return PLUS_OPERATOR; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 32 ".\\lexer.l"
+#line 32 "lexer.l"
 { return MINUS_OPERATOR; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 33 ".\\lexer.l"
+#line 33 "lexer.l"
 { return MULTIPLY_OPERATOR; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 34 ".\\lexer.l"
+#line 34 "lexer.l"
 { return DIVIDE_OPERATOR; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 35 ".\\lexer.l"
+#line 35 "lexer.l"
 { return TERMINATOR_SYMBOL; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 36 ".\\lexer.l"
+#line 36 "lexer.l"
 { return COMMA; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 37 ".\\lexer.l"
+#line 37 "lexer.l"
 { /* Ignore whitespace */ }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 38 ".\\lexer.l"
+#line 38 "lexer.l"
 { printf("Unknown symbol: %s\n", yytext); return UNKNOWN_SYMBOL; }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 39 ".\\lexer.l"
+#line 39 "lexer.l"
 { return 0; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 41 ".\\lexer.l"
+#line 41 "lexer.l"
 ECHO;
 	YY_BREAK
 #line 804 "lex.yy.c"
@@ -1684,7 +1684,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 41 ".\\lexer.l"
+#line 41 "lexer.l"
 
 
 int yywrap() {

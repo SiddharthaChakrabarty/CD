@@ -200,7 +200,7 @@ for_loop_statement:
 
         // Generate the start of the loop
         printf("%s:\n", start_label);
-        generate_for_loop($8, $6); // Use $5 for the condition limit
+        generate_for_loop($4, $6); // Use $5 for the condition limit
         printf("Loop body code generation:\n");
         
         // Generate the condition check and jump
@@ -348,48 +348,6 @@ while_loop_statement:
         printf("Loop body code generation:\n");
         printf("%s:\n", end_label);
     };  
-
-statement_list:
-    statement_list statement  
-    { 
-        $$ = mknode($1, $2, "Statement_List", "Statement List"); 
-    }
-    | statement 
-    { 
-        $$ = $1; 
-    };
-
-statement:
-    IDENTIFIER ASSIGNMENT_OPERATOR arithmetic_expression
-    { 
-        generate_assignment($1, $3); // Generate the assignment code for y = y + 1 or similar
-        printf("Assignment parsed: %s = %s\n", $1, $3);
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", $1, $3);
-        $$ = mknode(NULL, NULL, "Assignment", strdup(buffer));
-        add_token(identifiers, &identifier_count, $1); 
-        add_token(operators, &operator_count, "="); 
-    }
-    | IDENTIFIER INCREMENT_OPERATOR
-    { 
-        generate_increment($1);
-        printf("Increment parsed: %s++\n", $1);
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s++", $1);
-        $$ = mknode(NULL, NULL, "Increment", strdup(buffer));
-        add_token(identifiers, &identifier_count, $1); 
-        add_token(operators, &operator_count, "++");
-    }
-    | IDENTIFIER DECREMENT_OPERATOR
-    { 
-        generate_decrement($1);
-        printf("Decrement parsed: %s--\n", $1);
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s--", $1);
-        $$ = mknode(NULL, NULL, "Decrement", strdup(buffer));
-        add_token(identifiers, &identifier_count, $1); 
-        add_token(operators, &operator_count, "--");
-    };
 
 do_while_statement:  
     DO OPEN_BRACE statement_list CLOSE_BRACE WHILE OPEN_PARENTHESIS condition CLOSE_PARENTHESIS TERMINATOR_SYMBOL  
