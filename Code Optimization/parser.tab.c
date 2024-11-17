@@ -68,13 +68,12 @@
 /* Copy the first part of user declarations.  */
 
 /* Line 189 of yacc.c  */
-#line 1 "parser.y"
+#line 1 ".\\parser.y"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdbool.h>
 
 #define MAX_SYMBOLS 40
 
@@ -86,14 +85,6 @@ struct node {
     char *code;  // Actual code representation
     int id;      // Unique identifier for each node
 };
-
-typedef struct {
-    char *variable;
-    bool is_used;
-} VariableUsage;
-
-VariableUsage symbol_table[MAX_SYMBOLS];
-int symbol_table_size = 0;
 
 // Function prototypes
 struct node* mknode(struct node *left, struct node *right, const char *token, const char *code);
@@ -110,8 +101,6 @@ int label_count = 0; // Counter for labels
 char* new_temp(); // Function to generate temporary variable names
 char* new_label(); // Function to generate labels for jumps
 
-char* fold_constants(const char *operand1, const char *operand2, const char *operator);
-
 // Intermediate code generation functions
 void generate_code(const char* operation, const char* operand1, const char* operand2, const char* result);
 void generate_assignment(const char* variable, const char* value);
@@ -127,7 +116,7 @@ void generate_conditional_jump(const char* condition, const char* label);
 
 
 /* Line 189 of yacc.c  */
-#line 131 "parser.tab.c"
+#line 120 "parser.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -190,14 +179,14 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 58 "parser.y"
+#line 47 ".\\parser.y"
 
     char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.
 
 
 
 /* Line 214 of yacc.c  */
-#line 201 "parser.tab.c"
+#line 190 "parser.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -209,7 +198,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 213 "parser.tab.c"
+#line 202 "parser.tab.c"
 
 #ifdef short
 # undef short
@@ -510,10 +499,10 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    77,    77,    83,    89,    95,   101,   102,   108,   112,
-     118,   119,   125,   126,   127,   131,   132,   133,   137,   153,
-     160,   167,   172,   177,   184,   199,   214,   221,   230,   248,
-     266,   272,   276,   281,   286
+       0,    66,    66,    72,    78,    84,    90,    91,    97,   101,
+     107,   108,   114,   115,   116,   120,   121,   122,   126,   142,
+     149,   156,   161,   166,   173,   180,   187,   202,   219,   237,
+     255,   261,   265,   270,   275
 };
 #endif
 
@@ -1477,7 +1466,7 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 78 "parser.y"
+#line 67 ".\\parser.y"
     { 
         // Do something with the program node if needed
     ;}
@@ -1486,7 +1475,7 @@ yyreduce:
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 84 "parser.y"
+#line 73 ".\\parser.y"
     { 
         printf("Preprocessor directive parsed successfully!\n"); 
     ;}
@@ -1495,7 +1484,7 @@ yyreduce:
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 90 "parser.y"
+#line 79 ".\\parser.y"
     { 
         printf("Function definition processed correctly!\n"); 
     ;}
@@ -1504,7 +1493,7 @@ yyreduce:
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 96 "parser.y"
+#line 85 ".\\parser.y"
     { 
         printf("Variables declared and initialized.\n"); 
     ;}
@@ -1513,7 +1502,7 @@ yyreduce:
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 103 "parser.y"
+#line 92 ".\\parser.y"
     { 
         // Do something with declaration list if needed
     ;}
@@ -1522,7 +1511,7 @@ yyreduce:
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 109 "parser.y"
+#line 98 ".\\parser.y"
     { 
         generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate intermediate code for assignment
     ;}
@@ -1531,7 +1520,7 @@ yyreduce:
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 113 "parser.y"
+#line 102 ".\\parser.y"
     { 
         // Handle variable declaration without initialization
     ;}
@@ -1540,7 +1529,7 @@ yyreduce:
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 120 "parser.y"
+#line 109 ".\\parser.y"
     { 
         // Do something with statement list if needed
     ;}
@@ -1549,7 +1538,7 @@ yyreduce:
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 138 "parser.y"
+#line 127 ".\\parser.y"
     { 
         char* start_label = new_label(); 
         char* end_label = new_label(); 
@@ -1568,7 +1557,7 @@ yyreduce:
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 154 "parser.y"
+#line 143 ".\\parser.y"
     { 
         generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate intermediate code for initialization
         printf("For loop initialization parsed.\n"); 
@@ -1578,7 +1567,7 @@ yyreduce:
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 161 "parser.y"
+#line 150 ".\\parser.y"
     { 
         printf("Condition parsed: %s %s %s\n", (yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].str), (yyvsp[(3) - (3)].str));
         (yyval.str) = (yyvsp[(3) - (3)].str); // Return the value for further use in the loop code generation
@@ -1588,7 +1577,7 @@ yyreduce:
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 168 "parser.y"
+#line 157 ".\\parser.y"
     { 
         generate_increment((yyvsp[(1) - (2)].str)); // Generate intermediate code for increment
         printf("For loop update parsed.\n"); 
@@ -1598,7 +1587,7 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 173 "parser.y"
+#line 162 ".\\parser.y"
     { 
         generate_decrement((yyvsp[(1) - (2)].str)); // Generate intermediate code for decrement
         printf("For loop update parsed.\n"); 
@@ -1608,7 +1597,7 @@ yyreduce:
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 178 "parser.y"
+#line 167 ".\\parser.y"
     { 
         generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate intermediate code for assignment
         printf("For loop update parsed.\n");
@@ -1618,19 +1607,11 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 185 "parser.y"
+#line 174 ".\\parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-         // Constant folding
-        char *folded_result = fold_constants((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), "+");
-        if (folded_result) {
-            printf("Optimized Code: %s = %s\n", temp, folded_result);
-            free(folded_result);
-        } else {
-            generate_code("ADD", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp);
-        }
-
+        generate_code("ADD", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for addition
         (yyval.str) = temp;
     ;}
     break;
@@ -1638,19 +1619,11 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 200 "parser.y"
+#line 181 ".\\parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        // Constant folding
-        char *folded_result = fold_constants((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), "-");
-        if (folded_result) {
-            printf("Optimized Code: %s = %s\n", temp, folded_result);
-            free(folded_result);
-        } else {
-            generate_code("SUB", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp);
-        }
-
+        generate_code("SUB", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for subtraction
         (yyval.str) = temp;
     ;}
     break;
@@ -1658,11 +1631,19 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 215 "parser.y"
+#line 188 ".\\parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("MUL", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for multiplication
+        if (atoi((yyvsp[(3) - (3)].str)) == 2) {
+            // Replace x * 2 with x << 1
+            generate_code("SHL", (yyvsp[(1) - (3)].str), "1", temp); // SHL is bitwise left shift
+        } else if (atoi((yyvsp[(3) - (3)].str)) == 4) {
+            // Replace x * 4 with x << 2
+            generate_code("SHL", (yyvsp[(1) - (3)].str), "2", temp); // SHL is bitwise left shift
+        } else {
+            generate_code("MUL", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for multiplication
+        }
         (yyval.str) = temp;
     ;}
     break;
@@ -1670,11 +1651,19 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 222 "parser.y"
+#line 203 ".\\parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("DIV", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for division
+        if (atoi((yyvsp[(3) - (3)].str)) == 2) {
+            // Replace x / 2 with x >> 1
+            generate_code("SHR", (yyvsp[(1) - (3)].str), "1", temp); // SHR is bitwise right shift
+        } else if (atoi((yyvsp[(3) - (3)].str)) == 4) {
+            // Replace x / 4 with x >> 2
+            generate_code("SHR", (yyvsp[(1) - (3)].str), "2", temp); // SHR is bitwise right shift
+        } else {
+            generate_code("DIV", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for division
+        }
         (yyval.str) = temp;
     ;}
     break;
@@ -1682,7 +1671,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 231 "parser.y"
+#line 220 ".\\parser.y"
     { 
         char* start_label = new_label(); 
         char* end_label = new_label(); 
@@ -1703,7 +1692,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 249 "parser.y"
+#line 238 ".\\parser.y"
     { 
         char* start_label = new_label(); 
         char* end_label = new_label(); 
@@ -1724,7 +1713,7 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 267 "parser.y"
+#line 256 ".\\parser.y"
     { 
         printf("Function call encountered!\n"); 
     ;}
@@ -1733,7 +1722,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 273 "parser.y"
+#line 262 ".\\parser.y"
     { 
         generate_assignment((yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str)); // Generate intermediate code for assignment
     ;}
@@ -1742,7 +1731,7 @@ yyreduce:
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 277 "parser.y"
+#line 266 ".\\parser.y"
     { 
         generate_increment((yyvsp[(1) - (3)].str)); // Generate intermediate code for increment
         printf("Increment operation parsed.\n");
@@ -1752,7 +1741,7 @@ yyreduce:
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 282 "parser.y"
+#line 271 ".\\parser.y"
     { 
         generate_decrement((yyvsp[(1) - (3)].str)); // Generate intermediate code for decrement
         printf("Decrement operation parsed.\n");
@@ -1762,7 +1751,7 @@ yyreduce:
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 287 "parser.y"
+#line 276 ".\\parser.y"
     { 
         printf("Function call encountered!\n"); 
     ;}
@@ -1771,7 +1760,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 1775 "parser.tab.c"
+#line 1764 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1983,7 +1972,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 291 "parser.y"
+#line 280 ".\\parser.y"
 
 
 // Temporary variable management
@@ -1999,74 +1988,13 @@ char* new_label() {
     return label;  
 }
 
-bool is_variable_used(const char *variable) {
-    for (int i = 0; i < symbol_table_size; i++) {
-        if (strcmp(symbol_table[i].variable, variable) == 0) {
-            return symbol_table[i].is_used;
-        }
-    }
-    return false;
-}
-
-// Mark a variable as used
-void mark_variable_used(const char *variable) {
-    for (int i = 0; i < symbol_table_size; i++) {
-        if (strcmp(symbol_table[i].variable, variable) == 0) {
-            symbol_table[i].is_used = true;
-            return;
-        }
-    }
-    symbol_table[symbol_table_size++] = (VariableUsage){strdup(variable), true};
-}
-
-
-// Constant folding
-bool is_constant(const char *operand) {
-    for (int i = 0; operand[i]; i++) {
-        if (!isdigit(operand[i])) return false;
-    }
-    return true;
-}
-
-char* fold_constants(const char *operand1, const char *operand2, const char *operator) {
-    if (is_constant(operand1) && is_constant(operand2)) {
-        int val1 = atoi(operand1);
-        int val2 = atoi(operand2);
-        int result;
-
-        if (strcmp(operator, "+") == 0) result = val1 + val2;
-        else if (strcmp(operator, "-") == 0) result = val1 - val2;
-        else if (strcmp(operator, "*") == 0) result = val1 * val2;
-        else if (strcmp(operator, "/") == 0) result = val1 / val2;
-        else return NULL;
-
-        char *result_str = (char *)malloc(20);
-        sprintf(result_str, "%d", result);
-        return result_str;
-    }
-    return NULL;
-}
-
 // Intermediate code generation functions
 void generate_code(const char* operation, const char* operand1, const char* operand2, const char* result) {  
-    char *folded_result = fold_constants(operand1, operand2, operation);
-
-    if (folded_result) {
-        printf("Optimized Code: %s = %s\n", result, folded_result);
-        free(folded_result);
-    } else {
-        printf("Intermediate Code: %s %s, %s -> %s\n", operation, operand1, operand2, result);
-    }
-
+    printf("Intermediate Code: %s %s, %s -> %s\n", operation, operand1, operand2, result);  
 }  
 
 void generate_assignment(const char* variable, const char* value) {  
-    if (is_constant(value)) {
-        printf("Optimized Code: %s = %s\n", variable, value);
-    } else {
-        printf("Intermediate Code: %s = %s\n", variable, value);
-    }
-    mark_variable_used(variable);
+    printf("Intermediate Code: %s = %s\n", variable, value);  
 }  
 
 void generate_increment(const char* variable) {  
@@ -2118,4 +2046,3 @@ int yyerror(const char *s) {
     fprintf(stderr, "Error: %s\n", s);  
     return 0;  
 }
-

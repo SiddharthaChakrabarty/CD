@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdbool.h>
 
 #define MAX_SYMBOLS 40
 
@@ -15,14 +14,6 @@ struct node {
     char *code;  // Actual code representation
     int id;      // Unique identifier for each node
 };
-
-typedef struct {
-    char *variable;
-    bool is_used;
-} VariableUsage;
-
-VariableUsage symbol_table[MAX_SYMBOLS];
-int symbol_table_size = 0;
 
 // Function prototypes
 struct node* mknode(struct node *left, struct node *right, const char *token, const char *code);
@@ -38,8 +29,6 @@ int label_count = 0; // Counter for labels
 // Function prototypes for temporary variable management
 char* new_temp(); // Function to generate temporary variable names
 char* new_label(); // Function to generate labels for jumps
-
-char* fold_constants(const char *operand1, const char *operand2, const char *operator);
 
 // Intermediate code generation functions
 void generate_code(const char* operation, const char* operand1, const char* operand2, const char* result);
@@ -185,44 +174,44 @@ arithmetic_expression:
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-         // Constant folding
-        char *folded_result = fold_constants($1, $3, "+");
-        if (folded_result) {
-            printf("Optimized Code: %s = %s\n", temp, folded_result);
-            free(folded_result);
-        } else {
-            generate_code("ADD", $1, $3, temp);
-        }
-
+        generate_code("ADD", $1, $3, temp); // Generate intermediate code for addition
         $$ = temp;
     }
     | IDENTIFIER MINUS_OPERATOR VALUE  
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        // Constant folding
-        char *folded_result = fold_constants($1, $3, "-");
-        if (folded_result) {
-            printf("Optimized Code: %s = %s\n", temp, folded_result);
-            free(folded_result);
-        } else {
-            generate_code("SUB", $1, $3, temp);
-        }
-
+        generate_code("SUB", $1, $3, temp); // Generate intermediate code for subtraction
         $$ = temp;
     }
     | IDENTIFIER MULTIPLY_OPERATOR VALUE  
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("MUL", $1, $3, temp); // Generate intermediate code for multiplication
+        if (atoi($3) == 2) {
+            // Replace x * 2 with x << 1
+            generate_code("SHL", $1, "1", temp); // SHL is bitwise left shift
+        } else if (atoi($3) == 4) {
+            // Replace x * 4 with x << 2
+            generate_code("SHL", $1, "2", temp); // SHL is bitwise left shift
+        } else {
+            generate_code("MUL", $1, $3, temp); // Generate intermediate code for multiplication
+        }
         $$ = temp;
     }
     | IDENTIFIER DIVIDE_OPERATOR VALUE  
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("DIV", $1, $3, temp); // Generate intermediate code for division
+        if (atoi($3) == 2) {
+            // Replace x / 2 with x >> 1
+            generate_code("SHR", $1, "1", temp); // SHR is bitwise right shift
+        } else if (atoi($3) == 4) {
+            // Replace x / 4 with x >> 2
+            generate_code("SHR", $1, "2", temp); // SHR is bitwise right shift
+        } else {
+            generate_code("DIV", $1, $3, temp); // Generate intermediate code for division
+        }
         $$ = temp;
     };  
 
@@ -303,74 +292,13 @@ char* new_label() {
     return label;  
 }
 
-bool is_variable_used(const char *variable) {
-    for (int i = 0; i < symbol_table_size; i++) {
-        if (strcmp(symbol_table[i].variable, variable) == 0) {
-            return symbol_table[i].is_used;
-        }
-    }
-    return false;
-}
-
-// Mark a variable as used
-void mark_variable_used(const char *variable) {
-    for (int i = 0; i < symbol_table_size; i++) {
-        if (strcmp(symbol_table[i].variable, variable) == 0) {
-            symbol_table[i].is_used = true;
-            return;
-        }
-    }
-    symbol_table[symbol_table_size++] = (VariableUsage){strdup(variable), true};
-}
-
-
-// Constant folding
-bool is_constant(const char *operand) {
-    for (int i = 0; operand[i]; i++) {
-        if (!isdigit(operand[i])) return false;
-    }
-    return true;
-}
-
-char* fold_constants(const char *operand1, const char *operand2, const char *operator) {
-    if (is_constant(operand1) && is_constant(operand2)) {
-        int val1 = atoi(operand1);
-        int val2 = atoi(operand2);
-        int result;
-
-        if (strcmp(operator, "+") == 0) result = val1 + val2;
-        else if (strcmp(operator, "-") == 0) result = val1 - val2;
-        else if (strcmp(operator, "*") == 0) result = val1 * val2;
-        else if (strcmp(operator, "/") == 0) result = val1 / val2;
-        else return NULL;
-
-        char *result_str = (char *)malloc(20);
-        sprintf(result_str, "%d", result);
-        return result_str;
-    }
-    return NULL;
-}
-
 // Intermediate code generation functions
 void generate_code(const char* operation, const char* operand1, const char* operand2, const char* result) {  
-    char *folded_result = fold_constants(operand1, operand2, operation);
-
-    if (folded_result) {
-        printf("Optimized Code: %s = %s\n", result, folded_result);
-        free(folded_result);
-    } else {
-        printf("Intermediate Code: %s %s, %s -> %s\n", operation, operand1, operand2, result);
-    }
-
+    printf("Intermediate Code: %s %s, %s -> %s\n", operation, operand1, operand2, result);  
 }  
 
 void generate_assignment(const char* variable, const char* value) {  
-    if (is_constant(value)) {
-        printf("Optimized Code: %s = %s\n", variable, value);
-    } else {
-        printf("Intermediate Code: %s = %s\n", variable, value);
-    }
-    mark_variable_used(variable);
+    printf("Intermediate Code: %s = %s\n", variable, value);  
 }  
 
 void generate_increment(const char* variable) {  

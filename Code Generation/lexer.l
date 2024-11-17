@@ -30,6 +30,8 @@ int yylineno = 1;
 "--"                            { return DECREMENT_OPERATOR; }
 [+]                             { return PLUS_OPERATOR; }
 [-]                             { return MINUS_OPERATOR; }
+[*]                             { return MULTIPLY_OPERATOR; }
+[/]                             { return DIVIDE_OPERATOR; }
 [;]                             { return TERMINATOR_SYMBOL; }
 [,]                             { return COMMA; }
 [ \t]+                        { /* Ignore whitespace */ }
