@@ -75,15 +75,14 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 83 "parser.y"
+#line 58 "parser.y"
 
-    struct node* nd; 
-    char* str;         
+    char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.
 
 
 
 /* Line 1676 of yacc.c  */
-#line 87 "parser.tab.h"
+#line 86 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

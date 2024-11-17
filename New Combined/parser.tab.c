@@ -74,28 +74,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 #define MAX_SYMBOLS 40
-#define MAX_TOKENS 100
 
-char keywords[MAX_TOKENS][50];
-int keyword_count = 0;
-
-char identifiers[MAX_TOKENS][50];
-int identifier_count = 0;
-
-char operators[MAX_TOKENS][50];
-int operator_count = 0;
-
-char punctuations[MAX_TOKENS][50];
-int punctuation_count = 0;
-
-char constants[MAX_TOKENS][50];
-int constant_count = 0;
-
-char strings[MAX_TOKENS][50];
-int string_count = 0;
-
+// Node structure for parse tree
 struct node {
     struct node *left;
     struct node *right;
@@ -104,29 +87,32 @@ struct node {
     int id;      // Unique identifier for each node
 };
 
-void print_tokens_side_by_side();
+typedef struct {
+    char *variable;
+    bool is_used;
+} VariableUsage;
+
+VariableUsage symbol_table[MAX_SYMBOLS];
+int symbol_table_size = 0;
+
+// Function prototypes
 struct node* mknode(struct node *left, struct node *right, const char *token, const char *code);
-void add_token(char tokens[MAX_TOKENS][50], int *count, const char *text);
-void printtree(struct node *tree, int level);
 int yyerror(const char *s);
-int yylex(void); 
-extern FILE *yyin; 
-extern char *yytext;
-extern int yylineno; 
+int yylex(void); // Declare yylex
+extern FILE *yyin; // Declare yyin
+extern char *yytext; // Declare yytext
+extern int yylineno; // To track line numbers in lexer
 
 int temp_count = 0; // Counter for temporary variables
 int label_count = 0; // Counter for labels
 
-struct dataType {
-    char *id_name;
-    char *data_type;
-    int line_no;  
-    int scope;    
-} symbol_table[MAX_SYMBOLS];
-
+// Function prototypes for temporary variable management
 char* new_temp(); // Function to generate temporary variable names
-char* new_label();
+char* new_label(); // Function to generate labels for jumps
 
+char* fold_constants(const char *operand1, const char *operand2, const char *operator);
+
+// Intermediate code generation functions
 void generate_code(const char* operation, const char* operand1, const char* operand2, const char* result);
 void generate_assignment(const char* variable, const char* value);
 void generate_increment(const char* variable);
@@ -138,21 +124,10 @@ void generate_cmp(const char* operand1, const char* operand2);
 void generate_jump(const char* label);
 void generate_conditional_jump(const char* condition, const char* label);
 
-int count = 0; 
-char type[10];
-int current_scope = 0; 
-
-struct node *head;
-int nodeCounter = 1;
-
-// Function prototypes for symbol table
-void add(char *name, char *dtype, int line, int scope);
-int search(char *name);
-
 
 
 /* Line 189 of yacc.c  */
-#line 156 "parser.tab.c"
+#line 131 "parser.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -215,15 +190,14 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 83 "parser.y"
+#line 58 "parser.y"
 
-    struct node* nd; 
-    char* str;         
+    char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.
 
 
 
 /* Line 214 of yacc.c  */
-#line 227 "parser.tab.c"
+#line 201 "parser.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -235,7 +209,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 239 "parser.tab.c"
+#line 213 "parser.tab.c"
 
 #ifdef short
 # undef short
@@ -450,16 +424,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  5
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   120
+#define YYLAST   106
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  29
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  19
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  39
+#define YYNRULES  34
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  96
+#define YYNSTATES  95
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
@@ -510,7 +484,7 @@ static const yytype_uint8 yyprhs[] =
        0,     0,     3,     6,    12,    21,    25,    27,    31,    35,
       37,    39,    42,    44,    46,    48,    50,    52,    54,    66,
       70,    74,    77,    80,    84,    88,    92,    96,   100,   108,
-     111,   113,   117,   120,   123,   133,   139,   144,   148,   152
+     118,   124,   129,   133,   137
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
@@ -526,21 +500,20 @@ static const yytype_int8 yyrhs[] =
        8,    12,     9,    -1,     8,    23,    -1,     8,    24,    -1,
        8,    11,    43,    -1,     8,    19,     9,    -1,     8,    20,
        9,    -1,     8,    21,     9,    -1,     8,    22,     9,    -1,
-      26,    17,    41,    18,    15,    36,    16,    -1,    36,    37,
-      -1,    37,    -1,     8,    11,    43,    -1,     8,    23,    -1,
-       8,    24,    -1,    27,    15,    36,    16,    26,    17,    41,
-      18,    13,    -1,     6,    17,    10,    18,    13,    -1,     8,
-      11,     9,    13,    -1,     8,    23,    13,    -1,     8,    24,
-      13,    -1,     6,    17,    10,    18,    13,    -1
+      26,    17,    41,    18,    15,    36,    16,    -1,    27,    15,
+      36,    16,    26,    17,    41,    18,    13,    -1,     6,    17,
+      10,    18,    13,    -1,     8,    11,     9,    13,    -1,     8,
+      23,    13,    -1,     8,    24,    13,    -1,     6,    17,    10,
+      18,    13,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   100,   100,   107,   116,   131,   140,   141,   148,   158,
-     167,   168,   174,   175,   176,   180,   181,   182,   186,   212,
-     227,   240,   250,   260,   272,   285,   298,   311,   326,   353,
-     357,   363,   373,   383,   395,   423,   437,   450,   461,   472
+       0,    77,    77,    83,    89,    95,   101,   102,   108,   112,
+     118,   119,   125,   126,   127,   131,   132,   133,   137,   153,
+     160,   167,   172,   177,   184,   199,   214,   221,   230,   248,
+     266,   272,   276,   281,   286
 };
 #endif
 
@@ -581,8 +554,8 @@ static const yytype_uint8 yyr1[] =
 {
        0,    29,    30,    31,    32,    33,    34,    34,    35,    35,
       36,    36,    37,    37,    37,    38,    38,    38,    39,    40,
-      41,    42,    42,    42,    43,    43,    43,    43,    44,    36,
-      36,    37,    37,    37,    45,    46,    47,    47,    47,    47
+      41,    42,    42,    42,    43,    43,    43,    43,    44,    45,
+      46,    47,    47,    47,    47
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
@@ -590,8 +563,8 @@ static const yytype_uint8 yyr2[] =
 {
        0,     2,     2,     5,     8,     3,     1,     3,     3,     1,
        1,     2,     1,     1,     1,     1,     1,     1,    11,     3,
-       3,     2,     2,     3,     3,     3,     3,     3,     7,     2,
-       1,     3,     2,     2,     9,     5,     4,     3,     3,     5
+       3,     2,     2,     3,     3,     3,     3,     3,     7,     9,
+       5,     4,     3,     3,     5
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -602,44 +575,44 @@ static const yytype_uint8 yydefact[] =
        0,     0,     0,     0,     0,     1,     0,     2,     0,     0,
        0,     0,     3,     0,     0,     0,     0,     9,     0,     6,
        0,     0,     0,     0,     0,     0,    10,    12,    15,    16,
-      17,    13,    14,     0,     5,     0,     0,     0,    32,    33,
-       0,     0,     0,     4,    11,     8,     7,     0,     0,     0,
-      31,    37,    38,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,    36,     0,     0,     0,     0,     0,    35,
-      24,    25,    26,    27,    19,     0,    20,     0,     0,     0,
+      17,    13,    14,     0,     5,     0,     0,     0,     0,     0,
+       0,     0,     0,     4,    11,     8,     7,     0,     0,    32,
+      33,     0,     0,     0,     0,     0,     0,    31,     0,     0,
+       0,     0,     0,    30,    19,     0,    20,     0,     0,     0,
        0,     0,     0,     0,    28,     0,     0,    21,    22,     0,
-       0,    23,     0,    34,     0,    18
+       0,     0,    23,     0,    29,     0,     0,     0,     0,     0,
+      24,    25,    26,    27,    18
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
       -1,     2,     3,     7,    16,    18,    19,    25,    26,    27,
-      28,    54,    56,    83,    50,    29,    30,    31,    32
+      28,    52,    54,    73,    82,    29,    30,    31,    32
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -63
+#define YYPACT_NINF -57
 static const yytype_int8 yypact[] =
 {
-       3,     7,     9,    10,     4,   -63,    14,   -63,    25,    21,
-      19,    22,   -63,    26,    35,    36,    31,    34,    46,    52,
-      32,    23,    33,    50,    53,    -4,   -63,   -63,   -63,   -63,
-     -63,   -63,   -63,    61,   -63,    36,    62,     5,    58,    60,
-      66,    67,    31,   -63,   -63,   -63,   -63,    59,    43,    63,
-     -63,   -63,   -63,    68,    65,    69,    64,    -1,    70,    71,
-      75,    76,    77,   -63,    78,    67,    79,    74,    72,   -63,
-     -63,   -63,   -63,   -63,   -63,    80,   -63,    31,    73,    83,
-       2,    67,    37,    81,   -63,    82,    84,   -63,   -63,    86,
-      89,   -63,    31,   -63,    27,   -63
+       3,     1,     7,     4,    -3,   -57,    11,   -57,    14,    15,
+      13,    -5,   -57,     5,    40,    53,    33,    29,    35,    48,
+      46,    20,    49,    50,    54,    -4,   -57,   -57,   -57,   -57,
+     -57,   -57,   -57,    56,   -57,    53,    58,    61,    59,    60,
+      63,    66,    33,   -57,   -57,   -57,   -57,    57,    64,   -57,
+     -57,    65,    67,    69,    68,     2,    70,   -57,    73,    66,
+      75,    72,    52,   -57,   -57,    76,   -57,    33,    62,    77,
+       8,    66,    26,    74,   -57,    78,    80,   -57,   -57,    79,
+      82,    32,   -57,    33,   -57,    81,    84,    88,    89,    30,
+     -57,   -57,   -57,   -57,   -57
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -63,   -63,   -63,   -63,   -63,    85,   -63,   -41,   -25,   -63,
-     -63,   -63,   -62,   -63,     8,   -63,   -63,   -63,   -63
+     -57,   -57,   -57,   -57,   -57,    71,   -57,   -41,   -25,   -57,
+     -57,   -57,   -56,   -57,   -57,   -57,   -57,   -57,   -57
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -649,36 +622,32 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-      44,    57,    20,    75,    21,    20,     1,    21,    20,     5,
-      21,     4,    43,    48,    49,    68,     8,     6,    84,    85,
-       9,    22,    23,    24,    22,    23,    24,    22,    23,    24,
-      10,    12,    44,    20,    37,    21,    80,    20,    11,    21,
-      13,    14,    15,    95,    17,    33,    38,    39,    86,    36,
-      40,    94,    22,    23,    24,    44,    22,    23,    24,    34,
-      87,    88,    59,    60,    61,    62,    35,    41,    42,    44,
-      45,    51,    47,    52,    53,    55,    63,    58,    65,    64,
-      70,    66,    67,    69,    71,    72,    73,    74,    76,    77,
-      81,    82,    48,    79,    91,     0,     0,     0,    78,    89,
-      90,    92,    93,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-      46
+      44,    55,    20,    65,    21,     4,     1,     5,    20,     8,
+      21,     6,    43,    13,    20,    75,    21,     9,    62,    10,
+      14,    22,    23,    24,    74,    12,    70,    22,    23,    24,
+      44,    37,    11,    22,    23,    24,    20,    76,    21,    20,
+      33,    21,    89,    38,    39,    44,    94,    15,    34,    77,
+      78,    85,    86,    87,    88,    22,    23,    24,    22,    23,
+      24,    17,    35,    36,    44,    45,    40,    41,    47,    42,
+      48,    51,    49,    50,    53,    56,    58,    57,    68,    71,
+      59,    60,    64,    63,    66,    72,    61,    67,    81,    69,
+      90,     0,    79,    91,    83,    84,    80,    92,    93,     0,
+       0,     0,     0,     0,     0,     0,    46
 };
 
 static const yytype_int8 yycheck[] =
 {
-      25,    42,     6,    65,     8,     6,     3,     8,     6,     0,
-       8,     4,    16,     8,     9,    16,    12,     7,    16,    81,
-       6,    25,    26,    27,    25,    26,    27,    25,    26,    27,
-       5,    12,    57,     6,    11,     8,    77,     6,    17,     8,
-      18,    15,     7,    16,     8,    11,    23,    24,    11,    17,
-      17,    92,    25,    26,    27,    80,    25,    26,    27,    13,
-      23,    24,    19,    20,    21,    22,    14,    17,    15,    94,
-       9,    13,    10,    13,     8,     8,    13,    18,    13,    11,
-       9,    12,    18,    13,     9,     9,     9,     9,     9,    15,
-      17,     8,     8,    13,    86,    -1,    -1,    -1,    26,    18,
-      18,    15,    13,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      35
+      25,    42,     6,    59,     8,     4,     3,     0,     6,    12,
+       8,     7,    16,    18,     6,    71,     8,     6,    16,     5,
+      15,    25,    26,    27,    16,    12,    67,    25,    26,    27,
+      55,    11,    17,    25,    26,    27,     6,    11,     8,     6,
+      11,     8,    83,    23,    24,    70,    16,     7,    13,    23,
+      24,    19,    20,    21,    22,    25,    26,    27,    25,    26,
+      27,     8,    14,    17,    89,     9,    17,    17,    10,    15,
+       9,     8,    13,    13,     8,    18,    11,    13,    26,    17,
+      13,    12,     9,    13,     9,     8,    18,    15,     8,    13,
+       9,    -1,    18,     9,    15,    13,    18,     9,     9,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    35
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -689,12 +658,12 @@ static const yytype_uint8 yystos[] =
        5,    17,    12,    18,    15,     7,    33,     8,    34,    35,
        6,     8,    25,    26,    27,    36,    37,    38,    39,    44,
       45,    46,    47,    11,    13,    14,    17,    11,    23,    24,
-      17,    17,    15,    16,    37,     9,    34,    10,     8,     9,
-      43,    13,    13,     8,    40,     8,    41,    36,    18,    19,
-      20,    21,    22,    13,    11,    13,    12,    18,    16,    13,
-       9,     9,     9,     9,     9,    41,     9,    15,    26,    13,
+      17,    17,    15,    16,    37,     9,    34,    10,     9,    13,
+      13,     8,    40,     8,    41,    36,    18,    13,    11,    13,
+      12,    18,    16,    13,     9,    41,     9,    15,    26,    13,
       36,    17,     8,    42,    16,    41,    11,    23,    24,    18,
-      18,    43,    15,    13,    36,    16
+      18,     8,    43,    15,    13,    19,    20,    21,    22,    36,
+       9,     9,     9,     9,    16
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1508,303 +1477,221 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 101 "parser.y"
+#line 78 "parser.y"
     { 
-        (yyval.str) = mknode((yyvsp[(1) - (2)].str), (yyvsp[(2) - (2)].str), "program", "Program Structure"); 
-        head = (yyval.str); 
+        // Do something with the program node if needed
     ;}
     break;
 
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 108 "parser.y"
+#line 84 "parser.y"
     { 
         printf("Preprocessor directive parsed successfully!\n"); 
-        (yyval.str) = mknode(NULL, NULL, "Preprocessor", "Preprocessor directive");
-        add_token(keywords, &keyword_count, "#include");
-        add_token(keywords, &keyword_count, "<stdio.h>");
     ;}
     break;
 
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 117 "parser.y"
+#line 90 "parser.y"
     { 
-        current_scope++; 
         printf("Function definition processed correctly!\n"); 
-        (yyval.str) = mknode((yyvsp[(6) - (8)].str), (yyvsp[(7) - (8)].str), "Function", "Function definition");
-        add_token(keywords, &keyword_count, "void");
-        add_token(keywords, &keyword_count, "main");
-        add_token(punctuations, &punctuation_count, "(");
-        add_token(punctuations, &punctuation_count, ")");
-        add_token(punctuations, &punctuation_count, "{");
-        add_token(punctuations, &punctuation_count, "}");
-        current_scope--; 
     ;}
     break;
 
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 132 "parser.y"
+#line 96 "parser.y"
     { 
         printf("Variables declared and initialized.\n"); 
-        (yyval.str) = mknode((yyvsp[(2) - (3)].str), NULL, "Declarations", "Declarations");
-        add_token(keywords, &keyword_count, "int");
-        add_token(punctuations, &punctuation_count, ";");
     ;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 142 "parser.y"
+#line 103 "parser.y"
     { 
-        (yyval.str) = mknode((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), "Declaration_List", "Declaration List");
-        add_token(punctuations, &punctuation_count, ",");
+        // Do something with declaration list if needed
     ;}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 149 "parser.y"
+#line 109 "parser.y"
     { 
-        char buffer[100];
-        snprintf(type, sizeof(type), "int"); // Assigning data type
-        add((yyvsp[(1) - (3)].str), type, yylineno, current_scope); 
-        (yyval.str) = mknode(NULL, NULL, "Var_Declaration", strdup(buffer)); // Ensure proper representation
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
-        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
-        add_token(operators, &operator_count, "=");
+        generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate intermediate code for assignment
     ;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 159 "parser.y"
+#line 113 "parser.y"
     { 
-        snprintf(type, sizeof(type), "int"); // Assigning data type
-        add((yyvsp[(1) - (1)].str), type, yylineno, current_scope); 
-        (yyval.str) = mknode(NULL, NULL, "Var_Declaration", strdup((yyvsp[(1) - (1)].str))); 
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (1)].str)); 
+        // Handle variable declaration without initialization
     ;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 169 "parser.y"
+#line 120 "parser.y"
     { 
-        (yyval.str) = mknode((yyvsp[(1) - (2)].str), (yyvsp[(2) - (2)].str), "Statements", "Statement List");
+        // Do something with statement list if needed
     ;}
     break;
 
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 187 "parser.y"
+#line 138 "parser.y"
     { 
-        current_scope++; // Increase scope level for the loop
-        printf("For loop parsed successfully!\n"); 
-        (yyval.str) = mknode(mknode((yyvsp[(3) - (11)].str), mknode((yyvsp[(5) - (11)].str), (yyvsp[(7) - (11)].str), "For_Update", "For Update"), "For_Loop", "For Loop"), NULL, "For_Loop", "For Loop Body");
-        add_token(keywords, &keyword_count, "for");
-        add_token(punctuations, &punctuation_count, "(");
-        add_token(punctuations, &punctuation_count, ")");
-        add_token(punctuations, &punctuation_count, "{");
-        add_token(punctuations, &punctuation_count, "}");
-        add_token(punctuations, &punctuation_count, ";");
-        current_scope--; // Decrease scope level after loop
         char* start_label = new_label(); 
         char* end_label = new_label(); 
 
         // Generate the start of the loop
         printf("%s:\n", start_label);
-        generate_for_loop((yyvsp[(8) - (11)].str), (yyvsp[(6) - (11)].str)); // Use $5 for the condition limit
+        generate_for_loop((yyvsp[(3) - (11)].str), (yyvsp[(5) - (11)].str)); // Use $5 for the condition limit
         printf("Loop body code generation:\n");
         
         // Generate the condition check and jump
-        generate_cmp((yyvsp[(8) - (11)].str), (yyvsp[(6) - (11)].str)); 
-        generate_conditional_jump("JE", end_label);
+        generate_cmp((yyvsp[(3) - (11)].str), (yyvsp[(5) - (11)].str)); 
+        generate_conditional_jump("JE", end_label); // Jump to end if condition is false
     ;}
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 213 "parser.y"
+#line 154 "parser.y"
     { 
-        generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
+        generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate intermediate code for initialization
         printf("For loop initialization parsed.\n"); 
-        snprintf(type, sizeof(type), "int"); // Assigning data type
-        add((yyvsp[(1) - (3)].str), type, yylineno, current_scope); 
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Correct handling
-        (yyval.str) = mknode(NULL, NULL, "For_Initialization", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
-        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
-        add_token(operators, &operator_count, "=");
     ;}
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 228 "parser.y"
+#line 161 "parser.y"
     { 
         printf("Condition parsed: %s %s %s\n", (yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].str), (yyvsp[(3) - (3)].str));
-        (yyval.str) = (yyvsp[(3) - (3)].str);
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s %s %s", (yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct condition representation
-        (yyval.str) = mknode(NULL, NULL, "Condition", strdup(buffer)); 
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
-        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
-        add_token(operators, &operator_count, "<");
+        (yyval.str) = (yyvsp[(3) - (3)].str); // Return the value for further use in the loop code generation
     ;}
     break;
 
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 241 "parser.y"
+#line 168 "parser.y"
     { 
-        generate_increment((yyvsp[(1) - (2)].str));
+        generate_increment((yyvsp[(1) - (2)].str)); // Generate intermediate code for increment
         printf("For loop update parsed.\n"); 
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s++", (yyvsp[(1) - (2)].str));
-        (yyval.str) = mknode(NULL, NULL, "For_Update", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (2)].str)); 
-        add_token(operators, &operator_count, "++");
     ;}
     break;
 
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 251 "parser.y"
+#line 173 "parser.y"
     { 
-        generate_decrement((yyvsp[(1) - (2)].str));
-        char buffer[100];
+        generate_decrement((yyvsp[(1) - (2)].str)); // Generate intermediate code for decrement
         printf("For loop update parsed.\n"); 
-        snprintf(buffer, sizeof(buffer), "%s--", (yyvsp[(1) - (2)].str));
-        (yyval.str) = mknode(NULL, NULL, "For_Update", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (2)].str)); 
-        add_token(operators, &operator_count, "--");
     ;}
     break;
 
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 261 "parser.y"
+#line 178 "parser.y"
     { 
-        generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
+        generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate intermediate code for assignment
         printf("For loop update parsed.\n");
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Assume arithmetic_expression returns a valid string
-        (yyval.str) = mknode(NULL, NULL, "For_Update", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
-        add_token(operators, &operator_count, "=");
     ;}
     break;
 
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 273 "parser.y"
+#line 185 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("ADD", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for addition
+         // Constant folding
+        char *folded_result = fold_constants((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), "+");
+        if (folded_result) {
+            printf("Optimized Code: %s = %s\n", temp, folded_result);
+            free(folded_result);
+        } else {
+            generate_code("ADD", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp);
+        }
+
         (yyval.str) = temp;
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s + %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
-        (yyval.str) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
-        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str));  
-        add_token(operators, &operator_count, "+");
     ;}
     break;
 
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 286 "parser.y"
+#line 200 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("SUB", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for subtraction
+        // Constant folding
+        char *folded_result = fold_constants((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), "-");
+        if (folded_result) {
+            printf("Optimized Code: %s = %s\n", temp, folded_result);
+            free(folded_result);
+        } else {
+            generate_code("SUB", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp);
+        }
+
         (yyval.str) = temp;
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s - %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
-        (yyval.str) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
-        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
-        add_token(operators, &operator_count, "-");
     ;}
     break;
 
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 299 "parser.y"
+#line 215 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
         generate_code("MUL", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for multiplication
         (yyval.str) = temp;
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s * %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
-        (yyval.str) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
-        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
-        add_token(operators, &operator_count, "*");
     ;}
     break;
 
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 312 "parser.y"
+#line 222 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
         generate_code("DIV", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for division
         (yyval.str) = temp;
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s / %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
-        (yyval.str) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
-        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
-        add_token(operators, &operator_count, "/");
     ;}
     break;
 
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 327 "parser.y"
+#line 231 "parser.y"
     { 
-        current_scope++; 
-        printf("While loop parsed successfully!\n"); 
-        (yyval.str) = mknode((yyvsp[(3) - (7)].str), (yyvsp[(6) - (7)].str), "While_Loop", "While Loop");
-        add_token(keywords, &keyword_count, "while");
-        add_token(punctuations, &punctuation_count, "(");
-        add_token(punctuations, &punctuation_count, ")");
-        add_token(punctuations, &punctuation_count, "{");
-        add_token(punctuations, &punctuation_count, "}");
-        current_scope--; 
         char* start_label = new_label(); 
         char* end_label = new_label(); 
 
         printf("%s:\n", start_label);
-        generate_while_loop((yyvsp[(4) - (7)].str)); // Generate while loop with condition
+        generate_while_loop((yyvsp[(3) - (7)].str)); // Generate while loop with condition
         
         // Generate the condition check and jump
-        generate_cmp((yyvsp[(7) - (7)].str), (yyvsp[(4) - (7)].str)); 
+        generate_cmp((yyvsp[(1) - (7)].str), (yyvsp[(3) - (7)].str)); 
         generate_conditional_jump("JE", end_label); // Jump to end if condition is false
 
         // Loop body
@@ -1816,89 +1703,16 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 354 "parser.y"
+#line 249 "parser.y"
     { 
-        (yyval.str) = mknode((yyvsp[(1) - (2)].str), (yyvsp[(2) - (2)].str), "Statement_List", "Statement List"); 
-    ;}
-    break;
-
-  case 30:
-
-/* Line 1455 of yacc.c  */
-#line 358 "parser.y"
-    { 
-        (yyval.str) = (yyvsp[(1) - (1)].str); 
-    ;}
-    break;
-
-  case 31:
-
-/* Line 1455 of yacc.c  */
-#line 364 "parser.y"
-    { 
-        generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate the assignment code for y = y + 1 or similar
-        printf("Assignment parsed: %s = %s\n", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str));
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str));
-        (yyval.str) = mknode(NULL, NULL, "Assignment", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
-        add_token(operators, &operator_count, "="); 
-    ;}
-    break;
-
-  case 32:
-
-/* Line 1455 of yacc.c  */
-#line 374 "parser.y"
-    { 
-        generate_increment((yyvsp[(1) - (2)].str));
-        printf("Increment parsed: %s++\n", (yyvsp[(1) - (2)].str));
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s++", (yyvsp[(1) - (2)].str));
-        (yyval.str) = mknode(NULL, NULL, "Increment", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (2)].str)); 
-        add_token(operators, &operator_count, "++");
-    ;}
-    break;
-
-  case 33:
-
-/* Line 1455 of yacc.c  */
-#line 384 "parser.y"
-    { 
-        generate_decrement((yyvsp[(1) - (2)].str));
-        printf("Decrement parsed: %s--\n", (yyvsp[(1) - (2)].str));
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s--", (yyvsp[(1) - (2)].str));
-        (yyval.str) = mknode(NULL, NULL, "Decrement", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (2)].str)); 
-        add_token(operators, &operator_count, "--");
-    ;}
-    break;
-
-  case 34:
-
-/* Line 1455 of yacc.c  */
-#line 396 "parser.y"
-    { 
-        current_scope++; // Increase scope level for the loop
-        printf("Do-while loop parsed successfully!\n"); 
-        struct node *bodyNode = mknode((yyvsp[(3) - (9)].str), NULL, "Do_While_Body", "Do While Body");
-        (yyval.str) = mknode(bodyNode, (yyvsp[(6) - (9)].str), "Do_While_Loop", "Do While Loop");
-        add_token(keywords, &keyword_count, "do");
-        add_token(keywords, &keyword_count, "while");
-        add_token(punctuations, &punctuation_count, "(");
-        add_token(punctuations, &punctuation_count, ")");
-        add_token(punctuations, &punctuation_count, ";");
-        current_scope--; // Decrease scope level after loop
-         char* start_label = new_label(); 
+        char* start_label = new_label(); 
         char* end_label = new_label(); 
 
         printf("%s:\n", start_label);
         generate_do_while_loop((yyvsp[(6) - (9)].str)); // Generate do-while loop with condition
         
         // Generate the condition check and jump
-        generate_cmp((yyvsp[(6) - (9)].str), (yyvsp[(8) - (9)].str)); 
+        generate_cmp((yyvsp[(1) - (9)].str), (yyvsp[(6) - (9)].str)); 
         generate_conditional_jump("JE", end_label); // Jump to end if condition is false
 
         // Loop body
@@ -1907,93 +1721,57 @@ yyreduce:
     ;}
     break;
 
-  case 35:
+  case 30:
 
 /* Line 1455 of yacc.c  */
-#line 424 "parser.y"
+#line 267 "parser.y"
     { 
         printf("Function call encountered!\n"); 
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "printf(%s)", (yyvsp[(3) - (5)].str)); // Assume STRING_LITERAL is valid
-        (yyval.str) = mknode(NULL, NULL, "Function_Call", strdup(buffer));
-        add_token(keywords, &keyword_count, "printf");
-        add_token(strings, &string_count, (yyvsp[(3) - (5)].str));
-        add_token(punctuations, &punctuation_count, "(");
-        add_token(punctuations, &punctuation_count, ")");
-        add_token(punctuations, &punctuation_count, ";");
     ;}
     break;
 
-  case 36:
+  case 31:
 
 /* Line 1455 of yacc.c  */
-#line 438 "parser.y"
+#line 273 "parser.y"
     { 
-        generate_assignment((yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str));
-        snprintf(type, sizeof(type), "int"); 
-        add((yyvsp[(1) - (4)].str), type, yylineno, current_scope); 
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str)); // Correct handling
-        (yyval.str) = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (4)].str)); 
-        add_token(constants, &constant_count, (yyvsp[(3) - (4)].str));
-        add_token(operators, &operator_count, "=");
-        add_token(punctuations, &punctuation_count, ";");
+        generate_assignment((yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str)); // Generate intermediate code for assignment
     ;}
     break;
 
-  case 37:
+  case 32:
 
 /* Line 1455 of yacc.c  */
-#line 451 "parser.y"
+#line 277 "parser.y"
     { 
-        generate_increment((yyvsp[(1) - (3)].str));
+        generate_increment((yyvsp[(1) - (3)].str)); // Generate intermediate code for increment
         printf("Increment operation parsed.\n");
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s++", (yyvsp[(1) - (3)].str));
-        (yyval.str) = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
-        add_token(operators, &operator_count, "++");
-        add_token(punctuations, &punctuation_count, ";");
     ;}
     break;
 
-  case 38:
+  case 33:
 
 /* Line 1455 of yacc.c  */
-#line 462 "parser.y"
+#line 282 "parser.y"
     { 
-        generate_decrement((yyvsp[(1) - (3)].str));
+        generate_decrement((yyvsp[(1) - (3)].str)); // Generate intermediate code for decrement
         printf("Decrement operation parsed.\n");
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "%s--", (yyvsp[(1) - (3)].str));
-        (yyval.str) = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
-        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
-        add_token(operators, &operator_count, "--");
-        add_token(punctuations, &punctuation_count, ";");
     ;}
     break;
 
-  case 39:
+  case 34:
 
 /* Line 1455 of yacc.c  */
-#line 473 "parser.y"
+#line 287 "parser.y"
     { 
         printf("Function call encountered!\n"); 
-        char buffer[100];
-        snprintf(buffer, sizeof(buffer), "printf(%s)", (yyvsp[(3) - (5)].str)); // Assume STRING_LITERAL is valid
-        (yyval.str) = mknode(NULL, NULL, "Function_Call", strdup(buffer));
-        add_token(strings, &string_count, (yyvsp[(3) - (5)].str));
-        add_token(punctuations, &punctuation_count, "(");
-        add_token(punctuations, &punctuation_count, ")");
-        add_token(punctuations, &punctuation_count, ";");
     ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 1997 "parser.tab.c"
+#line 1775 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2205,9 +1983,10 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 484 "parser.y"
-  
+#line 291 "parser.y"
 
+
+// Temporary variable management
 char* new_temp() {  
     char* temp = (char*)malloc(10);  
     sprintf(temp, "t%d", temp_count++);  
@@ -2220,13 +1999,74 @@ char* new_label() {
     return label;  
 }
 
+bool is_variable_used(const char *variable) {
+    for (int i = 0; i < symbol_table_size; i++) {
+        if (strcmp(symbol_table[i].variable, variable) == 0) {
+            return symbol_table[i].is_used;
+        }
+    }
+    return false;
+}
+
+// Mark a variable as used
+void mark_variable_used(const char *variable) {
+    for (int i = 0; i < symbol_table_size; i++) {
+        if (strcmp(symbol_table[i].variable, variable) == 0) {
+            symbol_table[i].is_used = true;
+            return;
+        }
+    }
+    symbol_table[symbol_table_size++] = (VariableUsage){strdup(variable), true};
+}
+
+
+// Constant folding
+bool is_constant(const char *operand) {
+    for (int i = 0; operand[i]; i++) {
+        if (!isdigit(operand[i])) return false;
+    }
+    return true;
+}
+
+char* fold_constants(const char *operand1, const char *operand2, const char *operator) {
+    if (is_constant(operand1) && is_constant(operand2)) {
+        int val1 = atoi(operand1);
+        int val2 = atoi(operand2);
+        int result;
+
+        if (strcmp(operator, "+") == 0) result = val1 + val2;
+        else if (strcmp(operator, "-") == 0) result = val1 - val2;
+        else if (strcmp(operator, "*") == 0) result = val1 * val2;
+        else if (strcmp(operator, "/") == 0) result = val1 / val2;
+        else return NULL;
+
+        char *result_str = (char *)malloc(20);
+        sprintf(result_str, "%d", result);
+        return result_str;
+    }
+    return NULL;
+}
+
 // Intermediate code generation functions
 void generate_code(const char* operation, const char* operand1, const char* operand2, const char* result) {  
-    printf("Intermediate Code: %s %s, %s -> %s\n", operation, operand1, operand2, result);  
+    char *folded_result = fold_constants(operand1, operand2, operation);
+
+    if (folded_result) {
+        printf("Optimized Code: %s = %s\n", result, folded_result);
+        free(folded_result);
+    } else {
+        printf("Intermediate Code: %s %s, %s -> %s\n", operation, operand1, operand2, result);
+    }
+
 }  
 
 void generate_assignment(const char* variable, const char* value) {  
-     
+    if (is_constant(value)) {
+        printf("Optimized Code: %s = %s\n", variable, value);
+    } else {
+        printf("Intermediate Code: %s = %s\n", variable, value);
+    }
+    mark_variable_used(variable);
 }  
 
 void generate_increment(const char* variable) {  
@@ -2263,131 +2103,19 @@ void generate_conditional_jump(const char* condition, const char* label) {
     printf("Intermediate Code: %s %s\n", condition, label);  
 }  
 
-int main(int argc, char *argv[]) {  
-    if (argc < 2) {  
-        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
-        return 1;  
+int main(int argc, char** argv) {
+    yyin = fopen(argv[1], "r");
+    if (!yyin) {
+        perror("Failed to open file");
+        return 1;
     }
-
-    FILE *file = fopen(argv[1], "r");     
-    if (!file) {         
-        perror("Failed to open input file");         
-        return 1;  
-    }      
-    yyin = file;  
-    yyparse();  
-    fclose(file);  
-
-    printf("\n=== Lexical Analysis Results ===\n");
-    print_tokens_side_by_side(); // Print all tokens side by side
-    printf("===============================\n\n"); 
-
-    printf("\n=== Symbol Table ===\n\n");
-    printf("----------------------------------------------------\n");
-    printf("|%-10s | %-10s | %-10s | %-10s |\n", "ID", "Type", "Line", "Scope");
-    printf("|----------------------------------------------------\n");
-
-    for (int i = 0; i < count; i++) {
-        printf("|%-10s | %-10s | %-10d | %-10d |\n", 
-            symbol_table[i].id_name, 
-            symbol_table[i].data_type, 
-            symbol_table[i].line_no, 
-            symbol_table[i].scope);
-    }
-
-    printf("----------------------------------------------------\n");
-
-    printf("\n=== Parse Tree ===\n\n");
-    printtree(head, 0); // Start with level 0
-
+    yyparse();
+    fclose(yyin);
     return 0;
 }
 
-void add(char *name, char *dtype, int line, int scope) {
-    symbol_table[count].id_name = strdup(name); // Store the variable name
-    symbol_table[count].data_type = strdup(dtype); // Store the data type
-    symbol_table[count].line_no = line; // Assign line number
-    symbol_table[count].scope = 1; // Assign scope
-    count++;
-}
-
-int search(char *name) {
-    for (int i = 0; i < count; i++) {
-        if (strcmp(symbol_table[i].id_name, name) == 0) {
-            return i; // Return index if found
-        }
-    }
-    return -1; // Not found
-}
-
-struct node* mknode(struct node *left, struct node *right, const char *token, const char *code) {
-    struct node *new_node = (struct node *)malloc(sizeof(struct node));
-    new_node->left = left;
-    new_node->right = right;
-    new_node->token = strdup(token);
-    new_node->code = strdup(code);
-    new_node->id = nodeCounter++; // Assign a unique ID
-    return new_node;
-}
-
-void add_token(char tokens[MAX_TOKENS][50], int *count, const char *text) {
-    if (*count < MAX_TOKENS) {
-        strcpy(tokens[*count], text);
-        (*count)++;
-    }
-}
-
-void print_tokens_side_by_side() {
-    int max_rows = 0;
-    
-    // Determine the maximum number of rows required
-    max_rows = keyword_count > identifier_count ? keyword_count : identifier_count;
-    max_rows = max_rows > operator_count ? max_rows : operator_count;
-    max_rows = max_rows > punctuation_count ? max_rows : punctuation_count;
-    max_rows = max_rows > constant_count ? max_rows : constant_count;
-    max_rows = max_rows > string_count ? max_rows : string_count;
-
-    printf("\n+----------------+-----------------+-----------------+-----------------+----------------+-----------------+\n");
-    printf("|   Keywords     |   Identifiers   |    Constants    |    Strings      |    Operators   |   Punctuation   |\n");
-    printf("+----------------+-----------------+-----------------+-----------------+----------------+-----------------+\n");
-    
-    for (int i = 0; i < max_rows; i++) {
-        printf("| %-14s | %-15s | %-15s | %-15s | %-14s | %-15s |\n", 
-               i < keyword_count ? keywords[i] : " ",
-               i < identifier_count ? identifiers[i] : " ",
-               i < constant_count ? constants[i] : " ",
-               i < string_count ? strings[i] : " ",
-               i < operator_count ? operators[i] : " ",
-               i < punctuation_count ? punctuations[i] : " ");
-    }
-    
-    printf("+----------------+-----------------+-----------------+-----------------+----------------+-----------------+\n");
-    printf("| %-14d | %-15d | %-15d | %-15d | %-14d | %-15d |\n", 
-           keyword_count, identifier_count, constant_count, string_count, operator_count, punctuation_count);
-    printf("+----------------+-----------------+-----------------+-----------------+----------------+-----------------+\n");
-}
-
-void printtree(struct node *tree, int level) {
-    if (!tree) return;
-
-    // Print the current node's details with indentation based on its level in the tree
-    for (int i = 0; i < level; i++) {
-        printf("    "); // Indentation
-    }
-
-    printf("Node ID: %d\n", tree->id);
-    for (int i = 0; i < level; i++) {
-        printf("    "); // Indentation
-    }
-    printf("Token: %-20s Code: %s\n", tree->token, tree->code);
-
-    // Recursively print left and right children
-    printtree(tree->left, level + 1);
-    printtree(tree->right, level + 1);
-}
-
-int yyerror(const char *s) {
-    fprintf(stderr, "Error: %s at line %d\n", s, yylineno);  // Display the error message along with the line number
-    return 0;
+int yyerror(const char *s) {  
+    fprintf(stderr, "Error: %s\n", s);  
+    return 0;  
 }
 
