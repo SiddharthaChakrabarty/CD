@@ -76,8 +76,26 @@
 #include <ctype.h>
 
 #define MAX_SYMBOLS 40
+#define MAX_TOKENS 100
 
-// Node structure for parse tree
+char keywords[MAX_TOKENS][50];
+int keyword_count = 0;
+
+char identifiers[MAX_TOKENS][50];
+int identifier_count = 0;
+
+char operators[MAX_TOKENS][50];
+int operator_count = 0;
+
+char punctuations[MAX_TOKENS][50];
+int punctuation_count = 0;
+
+char constants[MAX_TOKENS][50];
+int constant_count = 0;
+
+char strings[MAX_TOKENS][50];
+int string_count = 0;
+
 struct node {
     struct node *left;
     struct node *right;
@@ -86,22 +104,29 @@ struct node {
     int id;      // Unique identifier for each node
 };
 
-// Function prototypes
+void print_tokens_side_by_side();
 struct node* mknode(struct node *left, struct node *right, const char *token, const char *code);
+void add_token(char tokens[MAX_TOKENS][50], int *count, const char *text);
+void printtree(struct node *tree, int level);
 int yyerror(const char *s);
-int yylex(void); // Declare yylex
-extern FILE *yyin; // Declare yyin
-extern char *yytext; // Declare yytext
-extern int yylineno; // To track line numbers in lexer
+int yylex(void); 
+extern FILE *yyin; 
+extern char *yytext;
+extern int yylineno; 
 
 int temp_count = 0; // Counter for temporary variables
 int label_count = 0; // Counter for labels
 
-// Function prototypes for temporary variable management
-char* new_temp(); // Function to generate temporary variable names
-char* new_label(); // Function to generate labels for jumps
+struct dataType {
+    char *id_name;
+    char *data_type;
+    int line_no;  
+    int scope;    
+} symbol_table[MAX_SYMBOLS];
 
-// Intermediate code generation functions
+char* new_temp(); // Function to generate temporary variable names
+char* new_label();
+
 void generate_code(const char* operation, const char* operand1, const char* operand2, const char* result);
 void generate_assignment(const char* variable, const char* value);
 void generate_increment(const char* variable);
@@ -113,10 +138,21 @@ void generate_cmp(const char* operand1, const char* operand2);
 void generate_jump(const char* label);
 void generate_conditional_jump(const char* condition, const char* label);
 
+int count = 0; 
+char type[10];
+int current_scope = 0; 
+
+struct node *head;
+int nodeCounter = 1;
+
+// Function prototypes for symbol table
+void add(char *name, char *dtype, int line, int scope);
+int search(char *name);
+
 
 
 /* Line 189 of yacc.c  */
-#line 120 "parser.tab.c"
+#line 156 "parser.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -179,14 +215,15 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 47 ".\\parser.y"
+#line 83 ".\\parser.y"
 
-    char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.
+    struct node* nd; 
+    char* str;         
 
 
 
 /* Line 214 of yacc.c  */
-#line 190 "parser.tab.c"
+#line 227 "parser.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -198,7 +235,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 202 "parser.tab.c"
+#line 239 "parser.tab.c"
 
 #ifdef short
 # undef short
@@ -499,10 +536,10 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    66,    66,    72,    78,    84,    90,    91,    97,   101,
-     107,   108,   114,   115,   116,   120,   121,   122,   126,   142,
-     149,   156,   161,   166,   173,   180,   187,   194,   203,   221,
-     239,   245,   249,   254,   259
+       0,   100,   100,   107,   116,   131,   140,   141,   148,   158,
+     167,   168,   174,   175,   176,   180,   181,   182,   186,   212,
+     227,   240,   250,   260,   272,   285,   298,   311,   326,   353,
+     381,   395,   408,   419,   430
 };
 #endif
 
@@ -1466,80 +1503,116 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 67 ".\\parser.y"
+#line 101 ".\\parser.y"
     { 
-        // Do something with the program node if needed
+        (yyval.str) = mknode((yyvsp[(1) - (2)].str), (yyvsp[(2) - (2)].str), "program", "Program Structure"); 
+        head = (yyval.str); 
     ;}
     break;
 
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 73 ".\\parser.y"
+#line 108 ".\\parser.y"
     { 
         printf("Preprocessor directive parsed successfully!\n"); 
+        (yyval.str) = mknode(NULL, NULL, "Preprocessor", "Preprocessor directive");
+        add_token(keywords, &keyword_count, "#include");
+        add_token(keywords, &keyword_count, "<stdio.h>");
     ;}
     break;
 
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 79 ".\\parser.y"
+#line 117 ".\\parser.y"
     { 
+        current_scope++; 
         printf("Function definition processed correctly!\n"); 
+        (yyval.str) = mknode((yyvsp[(6) - (8)].str), (yyvsp[(7) - (8)].str), "Function", "Function definition");
+        add_token(keywords, &keyword_count, "void");
+        add_token(keywords, &keyword_count, "main");
+        add_token(punctuations, &punctuation_count, "(");
+        add_token(punctuations, &punctuation_count, ")");
+        add_token(punctuations, &punctuation_count, "{");
+        add_token(punctuations, &punctuation_count, "}");
+        current_scope--; 
     ;}
     break;
 
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 85 ".\\parser.y"
+#line 132 ".\\parser.y"
     { 
         printf("Variables declared and initialized.\n"); 
+        (yyval.str) = mknode((yyvsp[(2) - (3)].str), NULL, "Declarations", "Declarations");
+        add_token(keywords, &keyword_count, "int");
+        add_token(punctuations, &punctuation_count, ";");
     ;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 92 ".\\parser.y"
+#line 142 ".\\parser.y"
     { 
-        // Do something with declaration list if needed
+        (yyval.str) = mknode((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), "Declaration_List", "Declaration List");
+        add_token(punctuations, &punctuation_count, ",");
     ;}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 98 ".\\parser.y"
+#line 149 ".\\parser.y"
     { 
-        generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate intermediate code for assignment
+        char buffer[100];
+        snprintf(type, sizeof(type), "int"); // Assigning data type
+        add((yyvsp[(1) - (3)].str), type, yylineno, current_scope); 
+        (yyval.str) = mknode(NULL, NULL, "Var_Declaration", strdup(buffer)); // Ensure proper representation
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
+        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
+        add_token(operators, &operator_count, "=");
     ;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 102 ".\\parser.y"
+#line 159 ".\\parser.y"
     { 
-        // Handle variable declaration without initialization
+        snprintf(type, sizeof(type), "int"); // Assigning data type
+        add((yyvsp[(1) - (1)].str), type, yylineno, current_scope); 
+        (yyval.str) = mknode(NULL, NULL, "Var_Declaration", strdup((yyvsp[(1) - (1)].str))); 
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (1)].str)); 
     ;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 109 ".\\parser.y"
+#line 169 ".\\parser.y"
     { 
-        // Do something with statement list if needed
+        (yyval.str) = mknode((yyvsp[(1) - (2)].str), (yyvsp[(2) - (2)].str), "Statements", "Statement List");
     ;}
     break;
 
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 127 ".\\parser.y"
+#line 187 ".\\parser.y"
     { 
+        current_scope++; // Increase scope level for the loop
+        printf("For loop parsed successfully!\n"); 
+        (yyval.str) = mknode(mknode((yyvsp[(3) - (11)].str), mknode((yyvsp[(5) - (11)].str), (yyvsp[(7) - (11)].str), "For_Update", "For Update"), "For_Loop", "For Loop"), NULL, "For_Loop", "For Loop Body");
+        add_token(keywords, &keyword_count, "for");
+        add_token(punctuations, &punctuation_count, "(");
+        add_token(punctuations, &punctuation_count, ")");
+        add_token(punctuations, &punctuation_count, "{");
+        add_token(punctuations, &punctuation_count, "}");
+        add_token(punctuations, &punctuation_count, ";");
+        current_scope--; // Decrease scope level after loop
         char* start_label = new_label(); 
         char* end_label = new_label(); 
 
@@ -1550,113 +1623,175 @@ yyreduce:
         
         // Generate the condition check and jump
         generate_cmp((yyvsp[(3) - (11)].str), (yyvsp[(5) - (11)].str)); 
-        generate_conditional_jump("JE", end_label); // Jump to end if condition is false
+        generate_conditional_jump("JE", end_label);
     ;}
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 143 ".\\parser.y"
+#line 213 ".\\parser.y"
     { 
-        generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate intermediate code for initialization
+        generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
         printf("For loop initialization parsed.\n"); 
+        snprintf(type, sizeof(type), "int"); // Assigning data type
+        add((yyvsp[(1) - (3)].str), type, yylineno, current_scope); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Correct handling
+        (yyval.str) = mknode(NULL, NULL, "For_Initialization", strdup(buffer));
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
+        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
+        add_token(operators, &operator_count, "=");
     ;}
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 150 ".\\parser.y"
+#line 228 ".\\parser.y"
     { 
         printf("Condition parsed: %s %s %s\n", (yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].str), (yyvsp[(3) - (3)].str));
-        (yyval.str) = (yyvsp[(3) - (3)].str); // Return the value for further use in the loop code generation
+        (yyval.str) = (yyvsp[(3) - (3)].str);
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s %s %s", (yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct condition representation
+        (yyval.str) = mknode(NULL, NULL, "Condition", strdup(buffer)); 
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
+        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
+        add_token(operators, &operator_count, "<");
     ;}
     break;
 
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 157 ".\\parser.y"
+#line 241 ".\\parser.y"
     { 
-        generate_increment((yyvsp[(1) - (2)].str)); // Generate intermediate code for increment
+        generate_increment((yyvsp[(1) - (2)].str));
         printf("For loop update parsed.\n"); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s++", (yyvsp[(1) - (2)].str));
+        (yyval.str) = mknode(NULL, NULL, "For_Update", strdup(buffer));
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (2)].str)); 
+        add_token(operators, &operator_count, "++");
     ;}
     break;
 
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 162 ".\\parser.y"
+#line 251 ".\\parser.y"
     { 
-        generate_decrement((yyvsp[(1) - (2)].str)); // Generate intermediate code for decrement
+        generate_decrement((yyvsp[(1) - (2)].str));
+        char buffer[100];
         printf("For loop update parsed.\n"); 
+        snprintf(buffer, sizeof(buffer), "%s--", (yyvsp[(1) - (2)].str));
+        (yyval.str) = mknode(NULL, NULL, "For_Update", strdup(buffer));
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (2)].str)); 
+        add_token(operators, &operator_count, "--");
     ;}
     break;
 
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 167 ".\\parser.y"
+#line 261 ".\\parser.y"
     { 
-        generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Generate intermediate code for assignment
+        generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
         printf("For loop update parsed.\n");
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Assume arithmetic_expression returns a valid string
+        (yyval.str) = mknode(NULL, NULL, "For_Update", strdup(buffer));
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
+        add_token(operators, &operator_count, "=");
     ;}
     break;
 
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 174 ".\\parser.y"
+#line 273 ".\\parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
         generate_code("ADD", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for addition
         (yyval.str) = temp;
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s + %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
+        (yyval.str) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
+        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str));  
+        add_token(operators, &operator_count, "+");
     ;}
     break;
 
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 181 ".\\parser.y"
+#line 286 ".\\parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
         generate_code("SUB", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for subtraction
         (yyval.str) = temp;
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s - %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
+        (yyval.str) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
+        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
+        add_token(operators, &operator_count, "-");
     ;}
     break;
 
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 188 ".\\parser.y"
+#line 299 ".\\parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
         generate_code("MUL", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for multiplication
         (yyval.str) = temp;
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s * %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
+        (yyval.str) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
+        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
+        add_token(operators, &operator_count, "*");
     ;}
     break;
 
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 195 ".\\parser.y"
+#line 312 ".\\parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
         generate_code("DIV", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for division
         (yyval.str) = temp;
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s / %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
+        (yyval.str) = mknode(NULL, NULL, "Arithmetic_Expression", strdup(buffer));
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
+        add_token(constants, &constant_count, (yyvsp[(3) - (3)].str)); 
+        add_token(operators, &operator_count, "/");
     ;}
     break;
 
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 204 ".\\parser.y"
+#line 327 ".\\parser.y"
     { 
+        current_scope++; 
+        printf("While loop parsed successfully!\n"); 
+        (yyval.str) = mknode((yyvsp[(3) - (7)].str), (yyvsp[(6) - (7)].str), "While_Loop", "While Loop");
+        add_token(keywords, &keyword_count, "while");
+        add_token(punctuations, &punctuation_count, "(");
+        add_token(punctuations, &punctuation_count, ")");
+        add_token(punctuations, &punctuation_count, "{");
+        add_token(punctuations, &punctuation_count, "}");
+        current_scope--; 
         char* start_label = new_label(); 
         char* end_label = new_label(); 
 
@@ -1676,9 +1811,19 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 222 ".\\parser.y"
+#line 354 ".\\parser.y"
     { 
-        char* start_label = new_label(); 
+        current_scope++; // Increase scope level for the loop
+        printf("Do-while loop parsed successfully!\n"); 
+        struct node *bodyNode = mknode((yyvsp[(3) - (9)].str), NULL, "Do_While_Body", "Do While Body");
+        (yyval.str) = mknode(bodyNode, (yyvsp[(6) - (9)].str), "Do_While_Loop", "Do While Loop");
+        add_token(keywords, &keyword_count, "do");
+        add_token(keywords, &keyword_count, "while");
+        add_token(punctuations, &punctuation_count, "(");
+        add_token(punctuations, &punctuation_count, ")");
+        add_token(punctuations, &punctuation_count, ";");
+        current_scope--; // Decrease scope level after loop
+         char* start_label = new_label(); 
         char* end_label = new_label(); 
 
         printf("%s:\n", start_label);
@@ -1697,54 +1842,90 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 240 ".\\parser.y"
+#line 382 ".\\parser.y"
     { 
         printf("Function call encountered!\n"); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "printf(%s)", (yyvsp[(3) - (5)].str)); // Assume STRING_LITERAL is valid
+        (yyval.str) = mknode(NULL, NULL, "Function_Call", strdup(buffer));
+        add_token(keywords, &keyword_count, "printf");
+        add_token(strings, &string_count, (yyvsp[(3) - (5)].str));
+        add_token(punctuations, &punctuation_count, "(");
+        add_token(punctuations, &punctuation_count, ")");
+        add_token(punctuations, &punctuation_count, ";");
     ;}
     break;
 
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 246 ".\\parser.y"
+#line 396 ".\\parser.y"
     { 
-        generate_assignment((yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str)); // Generate intermediate code for assignment
+        generate_assignment((yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str));
+        snprintf(type, sizeof(type), "int"); 
+        add((yyvsp[(1) - (4)].str), type, yylineno, current_scope); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s = %s", (yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str)); // Correct handling
+        (yyval.str) = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (4)].str)); 
+        add_token(constants, &constant_count, (yyvsp[(3) - (4)].str));
+        add_token(operators, &operator_count, "=");
+        add_token(punctuations, &punctuation_count, ";");
     ;}
     break;
 
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 250 ".\\parser.y"
+#line 409 ".\\parser.y"
     { 
-        generate_increment((yyvsp[(1) - (3)].str)); // Generate intermediate code for increment
+        generate_increment((yyvsp[(1) - (3)].str));
         printf("Increment operation parsed.\n");
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s++", (yyvsp[(1) - (3)].str));
+        (yyval.str) = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
+        add_token(operators, &operator_count, "++");
+        add_token(punctuations, &punctuation_count, ";");
     ;}
     break;
 
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 255 ".\\parser.y"
+#line 420 ".\\parser.y"
     { 
-        generate_decrement((yyvsp[(1) - (3)].str)); // Generate intermediate code for decrement
+        generate_decrement((yyvsp[(1) - (3)].str));
         printf("Decrement operation parsed.\n");
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "%s--", (yyvsp[(1) - (3)].str));
+        (yyval.str) = mknode(NULL, NULL, "Expression_Statement", strdup(buffer));
+        add_token(identifiers, &identifier_count, (yyvsp[(1) - (3)].str)); 
+        add_token(operators, &operator_count, "--");
+        add_token(punctuations, &punctuation_count, ";");
     ;}
     break;
 
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 260 ".\\parser.y"
+#line 431 ".\\parser.y"
     { 
         printf("Function call encountered!\n"); 
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "printf(%s)", (yyvsp[(3) - (5)].str)); // Assume STRING_LITERAL is valid
+        (yyval.str) = mknode(NULL, NULL, "Function_Call", strdup(buffer));
+        add_token(strings, &string_count, (yyvsp[(3) - (5)].str));
+        add_token(punctuations, &punctuation_count, "(");
+        add_token(punctuations, &punctuation_count, ")");
+        add_token(punctuations, &punctuation_count, ";");
     ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 1748 "parser.tab.c"
+#line 1929 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1956,10 +2137,9 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 264 ".\\parser.y"
+#line 442 ".\\parser.y"
+  
 
-
-// Temporary variable management
 char* new_temp() {  
     char* temp = (char*)malloc(10);  
     sprintf(temp, "t%d", temp_count++);  
@@ -2015,19 +2195,131 @@ void generate_conditional_jump(const char* condition, const char* label) {
     printf("Intermediate Code: %s %s\n", condition, label);  
 }  
 
-int main(int argc, char** argv) {
-    yyin = fopen(argv[1], "r");
-    if (!yyin) {
-        perror("Failed to open file");
-        return 1;
+int main(int argc, char *argv[]) {  
+    if (argc < 2) {  
+        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+        return 1;  
     }
-    yyparse();
-    fclose(yyin);
+
+    FILE *file = fopen(argv[1], "r");     
+    if (!file) {         
+        perror("Failed to open input file");         
+        return 1;  
+    }      
+    yyin = file;  
+    yyparse();  
+    fclose(file);  
+
+    printf("\n=== Lexical Analysis Results ===\n");
+    print_tokens_side_by_side(); // Print all tokens side by side
+    printf("===============================\n\n"); 
+
+    printf("\n=== Symbol Table ===\n\n");
+    printf("----------------------------------------------------\n");
+    printf("|%-10s | %-10s | %-10s | %-10s |\n", "ID", "Type", "Line", "Scope");
+    printf("|----------------------------------------------------\n");
+
+    for (int i = 0; i < count; i++) {
+        printf("|%-10s | %-10s | %-10d | %-10d |\n", 
+            symbol_table[i].id_name, 
+            symbol_table[i].data_type, 
+            symbol_table[i].line_no, 
+            symbol_table[i].scope);
+    }
+
+    printf("----------------------------------------------------\n");
+
+    printf("\n=== Parse Tree ===\n\n");
+    printtree(head, 0); // Start with level 0
+
     return 0;
 }
 
-int yyerror(const char *s) {  
-    fprintf(stderr, "Error: %s\n", s);  
-    return 0;  
+void add(char *name, char *dtype, int line, int scope) {
+    symbol_table[count].id_name = strdup(name); // Store the variable name
+    symbol_table[count].data_type = strdup(dtype); // Store the data type
+    symbol_table[count].line_no = line; // Assign line number
+    symbol_table[count].scope = 1; // Assign scope
+    count++;
+}
+
+int search(char *name) {
+    for (int i = 0; i < count; i++) {
+        if (strcmp(symbol_table[i].id_name, name) == 0) {
+            return i; // Return index if found
+        }
+    }
+    return -1; // Not found
+}
+
+struct node* mknode(struct node *left, struct node *right, const char *token, const char *code) {
+    struct node *new_node = (struct node *)malloc(sizeof(struct node));
+    new_node->left = left;
+    new_node->right = right;
+    new_node->token = strdup(token);
+    new_node->code = strdup(code);
+    new_node->id = nodeCounter++; // Assign a unique ID
+    return new_node;
+}
+
+void add_token(char tokens[MAX_TOKENS][50], int *count, const char *text) {
+    if (*count < MAX_TOKENS) {
+        strcpy(tokens[*count], text);
+        (*count)++;
+    }
+}
+
+void print_tokens_side_by_side() {
+    int max_rows = 0;
+    
+    // Determine the maximum number of rows required
+    max_rows = keyword_count > identifier_count ? keyword_count : identifier_count;
+    max_rows = max_rows > operator_count ? max_rows : operator_count;
+    max_rows = max_rows > punctuation_count ? max_rows : punctuation_count;
+    max_rows = max_rows > constant_count ? max_rows : constant_count;
+    max_rows = max_rows > string_count ? max_rows : string_count;
+
+    printf("\n+----------------+-----------------+-----------------+-----------------+----------------+-----------------+\n");
+    printf("|   Keywords     |   Identifiers   |    Constants    |    Strings      |    Operators   |   Punctuation   |\n");
+    printf("+----------------+-----------------+-----------------+-----------------+----------------+-----------------+\n");
+    
+    for (int i = 0; i < max_rows; i++) {
+        printf("| %-14s | %-15s | %-15s | %-15s | %-14s | %-15s |\n", 
+               i < keyword_count ? keywords[i] : " ",
+               i < identifier_count ? identifiers[i] : " ",
+               i < constant_count ? constants[i] : " ",
+               i < string_count ? strings[i] : " ",
+               i < operator_count ? operators[i] : " ",
+               i < punctuation_count ? punctuations[i] : " ");
+    }
+    
+    printf("+----------------+-----------------+-----------------+-----------------+----------------+-----------------+\n");
+    printf("| %-14d | %-15d | %-15d | %-15d | %-14d | %-15d |\n", 
+           keyword_count, identifier_count, constant_count, string_count, operator_count, punctuation_count);
+    printf("+----------------+-----------------+-----------------+-----------------+----------------+-----------------+\n");
+}
+
+void printtree(struct node *tree, int level) {
+    if (!tree) return;
+
+    // Print the current node's details with indentation based on its level in the tree
+    for (int i = 0; i < level; i++) {
+        printf("    "); // Indentation
+    }
+
+    printf("Node ID: %d\n", tree->id);
+    for (int i = 0; i < level; i++) {
+        printf("    "); // Indentation
+    }
+    printf("Token: %-20s Code: %s\n", tree->token, tree->code);
+
+    // Recursively print left and right children
+    printtree(tree->left, level + 1);
+    printtree(tree->right, level + 1);
+}
+
+int yyerror(const char *s) {
+    fprintf(stderr, "Error: %s at line %d\n", s, yylineno);  // Display the error message along with the line number
+    return 0;
 }
 
