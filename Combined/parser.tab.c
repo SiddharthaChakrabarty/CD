@@ -68,7 +68,7 @@
 /* Copy the first part of user declarations.  */
 
 /* Line 189 of yacc.c  */
-#line 1 ".\\parser.y"
+#line 1 "parser.y"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -215,7 +215,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 83 ".\\parser.y"
+#line 83 "parser.y"
 
     struct node* nd; 
     char* str;         
@@ -538,8 +538,8 @@ static const yytype_uint16 yyrline[] =
 {
        0,   100,   100,   107,   116,   131,   140,   141,   148,   158,
      167,   168,   174,   175,   176,   180,   181,   182,   186,   212,
-     227,   240,   250,   260,   272,   285,   298,   311,   326,   353,
-     381,   395,   408,   419,   430
+     227,   240,   250,   260,   272,   285,   298,   319,   342,   369,
+     397,   411,   424,   435,   446
 };
 #endif
 
@@ -1503,7 +1503,7 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 101 ".\\parser.y"
+#line 101 "parser.y"
     { 
         (yyval.str) = mknode((yyvsp[(1) - (2)].str), (yyvsp[(2) - (2)].str), "program", "Program Structure"); 
         head = (yyval.str); 
@@ -1513,7 +1513,7 @@ yyreduce:
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 108 ".\\parser.y"
+#line 108 "parser.y"
     { 
         printf("Preprocessor directive parsed successfully!\n"); 
         (yyval.str) = mknode(NULL, NULL, "Preprocessor", "Preprocessor directive");
@@ -1525,7 +1525,7 @@ yyreduce:
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 117 ".\\parser.y"
+#line 117 "parser.y"
     { 
         current_scope++; 
         printf("Function definition processed correctly!\n"); 
@@ -1543,7 +1543,7 @@ yyreduce:
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 132 ".\\parser.y"
+#line 132 "parser.y"
     { 
         printf("Variables declared and initialized.\n"); 
         (yyval.str) = mknode((yyvsp[(2) - (3)].str), NULL, "Declarations", "Declarations");
@@ -1555,7 +1555,7 @@ yyreduce:
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 142 ".\\parser.y"
+#line 142 "parser.y"
     { 
         (yyval.str) = mknode((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), "Declaration_List", "Declaration List");
         add_token(punctuations, &punctuation_count, ",");
@@ -1565,7 +1565,7 @@ yyreduce:
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 149 ".\\parser.y"
+#line 149 "parser.y"
     { 
         char buffer[100];
         snprintf(type, sizeof(type), "int"); // Assigning data type
@@ -1580,7 +1580,7 @@ yyreduce:
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 159 ".\\parser.y"
+#line 159 "parser.y"
     { 
         snprintf(type, sizeof(type), "int"); // Assigning data type
         add((yyvsp[(1) - (1)].str), type, yylineno, current_scope); 
@@ -1592,7 +1592,7 @@ yyreduce:
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 169 ".\\parser.y"
+#line 169 "parser.y"
     { 
         (yyval.str) = mknode((yyvsp[(1) - (2)].str), (yyvsp[(2) - (2)].str), "Statements", "Statement List");
     ;}
@@ -1601,7 +1601,7 @@ yyreduce:
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 187 ".\\parser.y"
+#line 187 "parser.y"
     { 
         current_scope++; // Increase scope level for the loop
         printf("For loop parsed successfully!\n"); 
@@ -1630,7 +1630,7 @@ yyreduce:
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 213 ".\\parser.y"
+#line 213 "parser.y"
     { 
         generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
         printf("For loop initialization parsed.\n"); 
@@ -1648,7 +1648,7 @@ yyreduce:
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 228 ".\\parser.y"
+#line 228 "parser.y"
     { 
         printf("Condition parsed: %s %s %s\n", (yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].str), (yyvsp[(3) - (3)].str));
         (yyval.str) = (yyvsp[(3) - (3)].str);
@@ -1664,7 +1664,7 @@ yyreduce:
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 241 ".\\parser.y"
+#line 241 "parser.y"
     { 
         generate_increment((yyvsp[(1) - (2)].str));
         printf("For loop update parsed.\n"); 
@@ -1679,7 +1679,7 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 251 ".\\parser.y"
+#line 251 "parser.y"
     { 
         generate_decrement((yyvsp[(1) - (2)].str));
         char buffer[100];
@@ -1694,7 +1694,7 @@ yyreduce:
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 261 ".\\parser.y"
+#line 261 "parser.y"
     { 
         generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
         printf("For loop update parsed.\n");
@@ -1709,7 +1709,7 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 273 ".\\parser.y"
+#line 273 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
@@ -1727,7 +1727,7 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 286 ".\\parser.y"
+#line 286 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
@@ -1745,11 +1745,19 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 299 ".\\parser.y"
+#line 299 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("MUL", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for multiplication
+        if (atoi((yyvsp[(3) - (3)].str)) == 2) {
+            // Replace x * 2 with x << 1
+            generate_code("SHL", (yyvsp[(1) - (3)].str), "1", temp); // SHL is bitwise left shift
+        } else if (atoi((yyvsp[(3) - (3)].str)) == 4) {
+            // Replace x * 4 with x << 2
+            generate_code("SHL", (yyvsp[(1) - (3)].str), "2", temp); // SHL is bitwise left shift
+        } else {
+            generate_code("MUL", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for multiplication
+        }
         (yyval.str) = temp;
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s * %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
@@ -1763,11 +1771,19 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 312 ".\\parser.y"
+#line 320 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("DIV", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for division
+        if (atoi((yyvsp[(3) - (3)].str)) == 2) {
+            // Replace x / 2 with x >> 1
+            generate_code("SHR", (yyvsp[(1) - (3)].str), "1", temp); // SHR is bitwise right shift
+        } else if (atoi((yyvsp[(3) - (3)].str)) == 4) {
+            // Replace x / 4 with x >> 2
+            generate_code("SHR", (yyvsp[(1) - (3)].str), "2", temp); // SHR is bitwise right shift
+        } else {
+            generate_code("DIV", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for division
+        }
         (yyval.str) = temp;
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s / %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
@@ -1781,7 +1797,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 327 ".\\parser.y"
+#line 343 "parser.y"
     { 
         current_scope++; 
         printf("While loop parsed successfully!\n"); 
@@ -1811,7 +1827,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 354 ".\\parser.y"
+#line 370 "parser.y"
     { 
         current_scope++; // Increase scope level for the loop
         printf("Do-while loop parsed successfully!\n"); 
@@ -1842,7 +1858,7 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 382 ".\\parser.y"
+#line 398 "parser.y"
     { 
         printf("Function call encountered!\n"); 
         char buffer[100];
@@ -1859,7 +1875,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 396 ".\\parser.y"
+#line 412 "parser.y"
     { 
         generate_assignment((yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str));
         snprintf(type, sizeof(type), "int"); 
@@ -1877,7 +1893,7 @@ yyreduce:
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 409 ".\\parser.y"
+#line 425 "parser.y"
     { 
         generate_increment((yyvsp[(1) - (3)].str));
         printf("Increment operation parsed.\n");
@@ -1893,7 +1909,7 @@ yyreduce:
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 420 ".\\parser.y"
+#line 436 "parser.y"
     { 
         generate_decrement((yyvsp[(1) - (3)].str));
         printf("Decrement operation parsed.\n");
@@ -1909,7 +1925,7 @@ yyreduce:
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 431 ".\\parser.y"
+#line 447 "parser.y"
     { 
         printf("Function call encountered!\n"); 
         char buffer[100];
@@ -1925,7 +1941,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 1929 "parser.tab.c"
+#line 1945 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2137,7 +2153,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 442 ".\\parser.y"
+#line 458 "parser.y"
   
 
 char* new_temp() {  

@@ -299,7 +299,15 @@ arithmetic_expression:
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("MUL", $1, $3, temp); // Generate intermediate code for multiplication
+        if (atoi($3) == 2) {
+            // Replace x * 2 with x << 1
+            generate_code("SHL", $1, "1", temp); // SHL is bitwise left shift
+        } else if (atoi($3) == 4) {
+            // Replace x * 4 with x << 2
+            generate_code("SHL", $1, "2", temp); // SHL is bitwise left shift
+        } else {
+            generate_code("MUL", $1, $3, temp); // Generate intermediate code for multiplication
+        }
         $$ = temp;
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s * %s", $1, $3); // Ensure correct handling
@@ -312,7 +320,15 @@ arithmetic_expression:
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("DIV", $1, $3, temp); // Generate intermediate code for division
+        if (atoi($3) == 2) {
+            // Replace x / 2 with x >> 1
+            generate_code("SHR", $1, "1", temp); // SHR is bitwise right shift
+        } else if (atoi($3) == 4) {
+            // Replace x / 4 with x >> 2
+            generate_code("SHR", $1, "2", temp); // SHR is bitwise right shift
+        } else {
+            generate_code("DIV", $1, $3, temp); // Generate intermediate code for division
+        }
         $$ = temp;
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s / %s", $1, $3); // Ensure correct handling
@@ -497,19 +513,26 @@ void generate_conditional_jump(const char* condition, const char* label) {
 }  
 
 int main(int argc, char *argv[]) {  
-    if (argc < 2) {  
-        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
-        return 1;  
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s <input_file> <output_file>\n", argv[0]);
+        return 1;
     }
 
-    FILE *file = fopen(argv[1], "r");     
-    if (!file) {         
-        perror("Failed to open input file");         
-        return 1;  
-    }      
-    yyin = file;  
-    yyparse();  
-    fclose(file);  
+    yyin = fopen(argv[1], "r");
+    if (!yyin) {
+        perror("Failed to open input file");
+        return 1;
+    }
+
+    output_file = fopen(argv[2], "w");
+    if (!output_file) {
+        perror("Failed to open output file");
+        fclose(yyin);
+        return 1;
+    }
+    yyparse();
+    fclose(yyin);
+    fclose(output_file); 
 
     printf("\n=== Lexical Analysis Results ===\n");
     print_tokens_side_by_side(); // Print all tokens side by side

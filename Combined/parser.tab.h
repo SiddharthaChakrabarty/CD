@@ -75,7 +75,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 83 ".\\parser.y"
+#line 83 "parser.y"
 
     struct node* nd; 
     char* str;         

@@ -1,12 +1,16 @@
 #include <stdio.h>
 void main()
 {
-    int x = 0, y = 0, z = 0;
-    for(x = 0; x < 8; x = x+2){
+    int x = 0, y = 0, z = 0, w = 0;
+    for(x = 0; x < 10; x = x*2){
         printf("For loop");
     }
 
-    while(y < 1){
+    for(w = 0; w < 10; w = w/2){
+        printf("For loop");
+    }
+
+    while(y < 0){
         printf("While loop");
         y++;
     }
@@ -14,5 +18,5 @@ void main()
     do{
         printf("Do-while loop");
         z++;
-    }while(z < 1);
+    }while(z < 0);
 }

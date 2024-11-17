@@ -1,0 +1,38 @@
+Preprocessor directive parsed successfully!
+MOV x, 0
+MOV y, 0
+MOV z, 0
+MOV w, 0
+MOV x, 0
+SHL x, 1, t0
+MOV x, t0
+MOV x, 10
+L0:
+CMP x, 10
+JUMP_IF_FALSE L1
+    ; Output: printf("For loop")
+    JMP L0
+L1:
+MOV w, 0
+SHR w, 1, t1
+MOV w, t1
+MOV w, 10
+L2:
+CMP w, 10
+JUMP_IF_FALSE L3
+    ; Output: printf("For loop")
+    JMP L2
+L3:
+INC y
+CMP "For loop", 0
+JUMP_IF_FALSE L5
+    ; Output: printf("While loop")
+    JMP L4
+L5:
+INC z
+    ; Output: printf("Do-while loop")
+    INC y
+CMP y, z
+JUMP_IF_FALSE L7
+    JMP L6
+L7:
