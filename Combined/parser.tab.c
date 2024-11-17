@@ -77,6 +77,8 @@
 
 #define MAX_SYMBOLS 40
 #define MAX_TOKENS 100
+#define MAX_REGISTERS 10
+
 
 char keywords[MAX_TOKENS][50];
 int keyword_count = 0;
@@ -95,6 +97,9 @@ int constant_count = 0;
 
 char strings[MAX_TOKENS][50];
 int string_count = 0;
+
+int available_registers[MAX_REGISTERS] = {0};
+FILE *output_file; // File pointer for writing output
 
 struct node {
     struct node *left;
@@ -124,6 +129,9 @@ struct dataType {
     int scope;    
 } symbol_table[MAX_SYMBOLS];
 
+void register_allocate();
+void register_free(char* register_name);
+
 char* new_temp(); // Function to generate temporary variable names
 char* new_label();
 
@@ -137,6 +145,16 @@ void generate_do_while_loop(const char* condition);
 void generate_cmp(const char* operand1, const char* operand2);
 void generate_jump(const char* label);
 void generate_conditional_jump(const char* condition, const char* label);
+void generate_code_conditional_jump(char* label);
+void generate_code_mul_2(char* left, char* right, char* temp);
+void generate_code_mul_4(char* left, char* right, char* temp);
+void generate_code_div_2(char* left, char* right, char* temp);
+void generate_code_div_4(char* left, char* right, char* temp);
+void generate_code_jump(char* label);
+void generate_code_add(char* left, char* right, char* temp);
+void generate_code_sub(char* left, char* right, char* temp);
+void generate_code_mul(char* left, char* right, char* temp);
+void generate_code_div(char* left, char* right, char* temp);
 
 int count = 0; 
 char type[10];
@@ -152,7 +170,7 @@ int search(char *name);
 
 
 /* Line 189 of yacc.c  */
-#line 156 "parser.tab.c"
+#line 174 "parser.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -215,7 +233,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 83 "parser.y"
+#line 101 "parser.y"
 
     struct node* nd; 
     char* str;         
@@ -223,7 +241,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 227 "parser.tab.c"
+#line 245 "parser.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -235,7 +253,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 239 "parser.tab.c"
+#line 257 "parser.tab.c"
 
 #ifdef short
 # undef short
@@ -536,10 +554,10 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   100,   100,   107,   116,   131,   140,   141,   148,   158,
-     167,   168,   174,   175,   176,   180,   181,   182,   186,   212,
-     227,   240,   250,   260,   272,   285,   298,   319,   342,   369,
-     397,   411,   424,   435,   446
+       0,   118,   118,   125,   134,   149,   158,   159,   166,   176,
+     185,   186,   192,   193,   194,   198,   199,   200,   204,   235,
+     250,   263,   273,   283,   295,   309,   323,   347,   373,   404,
+     439,   453,   466,   477,   488
 };
 #endif
 
@@ -1503,7 +1521,7 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 101 "parser.y"
+#line 119 "parser.y"
     { 
         (yyval.str) = mknode((yyvsp[(1) - (2)].str), (yyvsp[(2) - (2)].str), "program", "Program Structure"); 
         head = (yyval.str); 
@@ -1513,7 +1531,7 @@ yyreduce:
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 108 "parser.y"
+#line 126 "parser.y"
     { 
         printf("Preprocessor directive parsed successfully!\n"); 
         (yyval.str) = mknode(NULL, NULL, "Preprocessor", "Preprocessor directive");
@@ -1525,7 +1543,7 @@ yyreduce:
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 117 "parser.y"
+#line 135 "parser.y"
     { 
         current_scope++; 
         printf("Function definition processed correctly!\n"); 
@@ -1543,7 +1561,7 @@ yyreduce:
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 132 "parser.y"
+#line 150 "parser.y"
     { 
         printf("Variables declared and initialized.\n"); 
         (yyval.str) = mknode((yyvsp[(2) - (3)].str), NULL, "Declarations", "Declarations");
@@ -1555,7 +1573,7 @@ yyreduce:
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 142 "parser.y"
+#line 160 "parser.y"
     { 
         (yyval.str) = mknode((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), "Declaration_List", "Declaration List");
         add_token(punctuations, &punctuation_count, ",");
@@ -1565,7 +1583,7 @@ yyreduce:
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 149 "parser.y"
+#line 167 "parser.y"
     { 
         char buffer[100];
         snprintf(type, sizeof(type), "int"); // Assigning data type
@@ -1580,7 +1598,7 @@ yyreduce:
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 159 "parser.y"
+#line 177 "parser.y"
     { 
         snprintf(type, sizeof(type), "int"); // Assigning data type
         add((yyvsp[(1) - (1)].str), type, yylineno, current_scope); 
@@ -1592,7 +1610,7 @@ yyreduce:
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 169 "parser.y"
+#line 187 "parser.y"
     { 
         (yyval.str) = mknode((yyvsp[(1) - (2)].str), (yyvsp[(2) - (2)].str), "Statements", "Statement List");
     ;}
@@ -1601,7 +1619,7 @@ yyreduce:
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 187 "parser.y"
+#line 205 "parser.y"
     { 
         current_scope++; // Increase scope level for the loop
         printf("For loop parsed successfully!\n"); 
@@ -1618,19 +1636,24 @@ yyreduce:
 
         // Generate the start of the loop
         printf("%s:\n", start_label);
+        fprintf(output_file,"MOV %s, %s\n", (yyvsp[(3) - (11)].str), (yyvsp[(5) - (11)].str)); // Initial assignment for the loop variable
+        fprintf(output_file,"%s:\n", start_label); 
         generate_for_loop((yyvsp[(4) - (11)].str), (yyvsp[(6) - (11)].str)); // Use $5 for the condition limit
         printf("Loop body code generation:\n");
         
         // Generate the condition check and jump
         generate_cmp((yyvsp[(8) - (11)].str), (yyvsp[(6) - (11)].str)); 
         generate_conditional_jump("JE", end_label);
+        fprintf(output_file,"    ; Output: printf(\"For loop\")\n"); // Output for the for loop
+        fprintf(output_file,"    JMP %s\n", start_label);  // Jump back to the start of the loop
+        fprintf(output_file,"%s:\n", end_label);  // End label
     ;}
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 213 "parser.y"
+#line 236 "parser.y"
     { 
         generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
         printf("For loop initialization parsed.\n"); 
@@ -1648,7 +1671,7 @@ yyreduce:
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 228 "parser.y"
+#line 251 "parser.y"
     { 
         printf("Condition parsed: %s %s %s\n", (yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].str), (yyvsp[(3) - (3)].str));
         (yyval.str) = (yyvsp[(3) - (3)].str);
@@ -1664,7 +1687,7 @@ yyreduce:
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 241 "parser.y"
+#line 264 "parser.y"
     { 
         generate_increment((yyvsp[(1) - (2)].str));
         printf("For loop update parsed.\n"); 
@@ -1679,7 +1702,7 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 251 "parser.y"
+#line 274 "parser.y"
     { 
         generate_decrement((yyvsp[(1) - (2)].str));
         char buffer[100];
@@ -1694,7 +1717,7 @@ yyreduce:
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 261 "parser.y"
+#line 284 "parser.y"
     { 
         generate_assignment((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); 
         printf("For loop update parsed.\n");
@@ -1709,11 +1732,12 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 273 "parser.y"
+#line 296 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("ADD", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for addition
+        generate_code("ADD", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp);
+        generate_code_add((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for addition
         (yyval.str) = temp;
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s + %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
@@ -1727,11 +1751,12 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 286 "parser.y"
+#line 310 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("SUB", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for subtraction
+        generate_code("SUB", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp);
+        generate_code_sub((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for subtraction
         (yyval.str) = temp;
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s - %s", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str)); // Ensure correct handling
@@ -1745,18 +1770,21 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 299 "parser.y"
+#line 324 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
         if (atoi((yyvsp[(3) - (3)].str)) == 2) {
             // Replace x * 2 with x << 1
-            generate_code("SHL", (yyvsp[(1) - (3)].str), "1", temp); // SHL is bitwise left shift
+            generate_code("SHL", (yyvsp[(1) - (3)].str), "1", temp); 
+            generate_code_mul_2((yyvsp[(1) - (3)].str), "1", temp); // SHL is bitwise left shift// SHL is bitwise left shift
         } else if (atoi((yyvsp[(3) - (3)].str)) == 4) {
             // Replace x * 4 with x << 2
-            generate_code("SHL", (yyvsp[(1) - (3)].str), "2", temp); // SHL is bitwise left shift
+            generate_code("SHL", (yyvsp[(1) - (3)].str), "2", temp);
+            generate_code_mul_4((yyvsp[(1) - (3)].str), "2", temp); // SHL is bitwise left shift // SHL is bitwise left shift
         } else {
-            generate_code("MUL", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for multiplication
+            generate_code("MUL", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); 
+            generate_code_mul((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for multiplication// Generate intermediate code for multiplication
         }
         (yyval.str) = temp;
         char buffer[100];
@@ -1771,18 +1799,21 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 320 "parser.y"
+#line 348 "parser.y"
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
         if (atoi((yyvsp[(3) - (3)].str)) == 2) {
             // Replace x / 2 with x >> 1
-            generate_code("SHR", (yyvsp[(1) - (3)].str), "1", temp); // SHR is bitwise right shift
+            generate_code("SHR", (yyvsp[(1) - (3)].str), "1", temp); 
+            generate_code_div_2((yyvsp[(1) - (3)].str), "1", temp); // SHR is bitwise right shift// SHR is bitwise right shift
         } else if (atoi((yyvsp[(3) - (3)].str)) == 4) {
             // Replace x / 4 with x >> 2
-            generate_code("SHR", (yyvsp[(1) - (3)].str), "2", temp); // SHR is bitwise right shift
+            generate_code("SHR", (yyvsp[(1) - (3)].str), "2", temp); 
+            generate_code_div_4((yyvsp[(1) - (3)].str), "2", temp); // SHR is bitwise right shift// SHR is bitwise right shift
         } else {
-            generate_code("DIV", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for division
+            generate_code("DIV", (yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); 
+            generate_code_div((yyvsp[(1) - (3)].str), (yyvsp[(3) - (3)].str), temp); // Generate intermediate code for division// Generate intermediate code for division
         }
         (yyval.str) = temp;
         char buffer[100];
@@ -1797,7 +1828,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 343 "parser.y"
+#line 374 "parser.y"
     { 
         current_scope++; 
         printf("While loop parsed successfully!\n"); 
@@ -1818,6 +1849,10 @@ yyreduce:
         generate_cmp((yyvsp[(7) - (7)].str), (yyvsp[(4) - (7)].str)); 
         generate_conditional_jump("JE", end_label); // Jump to end if condition is false
 
+        fprintf(output_file,"    ; Output: printf(\"While loop\")\n");  // Output for the while loop
+        fprintf(output_file,"    JMP %s\n", start_label);  // Jump back to the start of the loop
+        fprintf(output_file,"%s:\n", end_label);  // End label
+
         // Loop body
         printf("Loop body code generation:\n");
         printf("%s:\n", end_label);
@@ -1827,7 +1862,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 370 "parser.y"
+#line 405 "parser.y"
     { 
         current_scope++; // Increase scope level for the loop
         printf("Do-while loop parsed successfully!\n"); 
@@ -1843,11 +1878,18 @@ yyreduce:
         char* end_label = new_label(); 
 
         printf("%s:\n", start_label);
+
+        fprintf(output_file,"    ; Output: printf(\"Do-while loop\")\n");  // Output for the do-while loop
+        fprintf(output_file,"    INC %s\n", (yyvsp[(1) - (9)].str));  // Increment first, for demonstration
         generate_do_while_loop((yyvsp[(6) - (9)].str)); // Generate do-while loop with condition
         
         // Generate the condition check and jump
         generate_cmp((yyvsp[(6) - (9)].str), (yyvsp[(8) - (9)].str)); 
-        generate_conditional_jump("JE", end_label); // Jump to end if condition is false
+        generate_conditional_jump("JE", end_label); 
+        
+        
+        fprintf(output_file,"    JMP %s\n", start_label);  // Jump back to the start of the loop
+        fprintf(output_file,"%s:\n", end_label);  // End label// Jump to end if condition is false
 
         // Loop body
         printf("Loop body code generation:\n");
@@ -1858,7 +1900,7 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 398 "parser.y"
+#line 440 "parser.y"
     { 
         printf("Function call encountered!\n"); 
         char buffer[100];
@@ -1875,7 +1917,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 412 "parser.y"
+#line 454 "parser.y"
     { 
         generate_assignment((yyvsp[(1) - (4)].str), (yyvsp[(3) - (4)].str));
         snprintf(type, sizeof(type), "int"); 
@@ -1893,7 +1935,7 @@ yyreduce:
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 425 "parser.y"
+#line 467 "parser.y"
     { 
         generate_increment((yyvsp[(1) - (3)].str));
         printf("Increment operation parsed.\n");
@@ -1909,7 +1951,7 @@ yyreduce:
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 436 "parser.y"
+#line 478 "parser.y"
     { 
         generate_decrement((yyvsp[(1) - (3)].str));
         printf("Decrement operation parsed.\n");
@@ -1925,7 +1967,7 @@ yyreduce:
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 447 "parser.y"
+#line 489 "parser.y"
     { 
         printf("Function call encountered!\n"); 
         char buffer[100];
@@ -1941,7 +1983,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 1945 "parser.tab.c"
+#line 1987 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2153,7 +2195,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 458 "parser.y"
+#line 500 "parser.y"
   
 
 char* new_temp() {  
@@ -2173,58 +2215,139 @@ void generate_code(const char* operation, const char* operand1, const char* oper
     printf("Intermediate Code: %s %s, %s -> %s\n", operation, operand1, operand2, result);  
 }  
 
-void generate_assignment(const char* variable, const char* value) {  
-     
-}  
+void generate_assignment(const char* var, const char* expr) {
+    fprintf(output_file, "MOV %s, %s\n", var, expr); // Move expr into var
+}
 
 void generate_increment(const char* variable) {  
     char* temp = new_temp();  
     printf("Intermediate Code: %s = %s + 1\n", temp, variable);  
+    fprintf(output_file, "INC %s\n", variable); // Increment var
 }  
 
 void generate_decrement(const char* variable) {  
     char* temp = new_temp();  
-    printf("Intermediate Code: %s = %s - 1\n", temp, variable);  
-}  
+    printf("Intermediate Code: %s = %s - 1\n", temp, variable); 
+    fprintf(output_file, "DEC %s\n", variable); // Decrement var
+} 
+
+
+
+void generate_code_add(char* left, char* right, char* temp) {
+    fprintf(output_file, "ADD %s, %s, %s\n", left, right, temp); // Generate add code
+}
+
+void generate_code_sub(char* left, char* right, char* temp) {
+    fprintf(output_file, "SUB %s, %s, %s\n", left, right, temp); // Generate subtract code
+}
+
+void generate_code_mul(char* left, char* right, char* temp) {
+    fprintf(output_file, "MUL %s, %s, %s\n", left, right, temp); // Generate multiply code
+}
+
+void generate_code_div(char* left, char* right, char* temp) {
+    fprintf(output_file, "DIV %s, %s, %s\n", left, right, temp); // Generate divide code
+}
 
 void generate_for_loop(const char* loop_var, const char* limit) {  
-    printf("For loop variable: %s, Limit: %s\n", loop_var, limit);  
+    printf("For loop variable: %s, Limit: %s\n", loop_var, limit);
+    fprintf(output_file,"For loop variable: %s, Limit: %s\n", loop_var, limit);  
 }  
 
 void generate_while_loop(const char* condition) {  
     printf("While loop condition: %s\n", condition);  
-}  
+    fprintf(output_file, "WHILE loop for condition: %s\n", condition);
+}
+
 
 void generate_do_while_loop(const char* condition) {  
     printf("Do-while loop condition: %s\n", condition);  
+    fprintf(output_file, "DO-WHILE loop for condition: %s\n", condition);
 }  
 
 void generate_cmp(const char* operand1, const char* operand2) {  
     printf("Intermediate Code: CMP %s, %s\n", operand1, operand2);  
+    fprintf(output_file, "CMP %s, %s\n", operand1, operand2); // Compare the two operands
 }  
 
 void generate_jump(const char* label) {  
-    printf("Intermediate Code: JMP %s\n", label);  
+    printf("Intermediate Code: JMP %s\n", label); 
+    fprintf(output_file, "JUMP %s\n", label); 
 }  
 
 void generate_conditional_jump(const char* condition, const char* label) {  
     printf("Intermediate Code: %s %s\n", condition, label);  
+    fprintf(output_file, "JUMP_IF_FALSE %s\n", label);
 }  
 
-int main(int argc, char *argv[]) {  
-    if (argc < 2) {  
-        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
-        return 1;  
+void generate_code_jump(char* label) {
+    fprintf(output_file, "JUMP %s\n", label);
+}
+
+void generate_code_conditional_jump(char* label) {
+    fprintf(output_file, "JUMP_IF_FALSE %s\n", label);
+}
+
+void generate_code_mul_2(char* left, char* right, char* temp) {
+    fprintf(output_file, "SHL %s, %s, %s\n", left, right, temp);
+    
+}
+
+void generate_code_mul_4(char* left, char* right, char* temp) {
+    fprintf(output_file, "SHL %s, %s, %s\n", left, right, temp);
+    
+}
+
+void generate_code_div_2(char* left, char* right, char* temp) {
+    fprintf(output_file, "SHR %s, %s, %s\n", left, right, temp);
+    
+}
+
+void generate_code_div_4(char* left, char* right, char* temp) {
+    fprintf(output_file, "SHR %s, %s, %s\n", left, right, temp);
+    
+}
+
+void register_allocate() {
+    // A simple register allocation for temporary variables (use the first available register)
+    for (int i = 0; i < MAX_REGISTERS; i++) {
+        if (available_registers[i] == 0) {
+            available_registers[i] = 1;  // Mark the register as used
+            printf("ALLOC R%d\n", i);
+            return;
+        }
+    }
+    // If no registers are available, we can just print an error or use a spill strategy
+    printf("Error: No registers available!\n");
+}
+
+void register_free(char* register_name) {
+    // Mark the register as free
+    int reg_num = atoi(register_name + 1); // Assuming register name is in the form Rn
+    available_registers[reg_num] = 0; // Free the register
+    printf("FREE %s\n", register_name); // Print the free register operation
+}
+
+int main(int argc, char** argv) {  
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s <input_file> <output_file>\n", argv[0]);
+        return 1;
     }
 
-    FILE *file = fopen(argv[1], "r");     
-    if (!file) {         
-        perror("Failed to open input file");         
-        return 1;  
-    }      
-    yyin = file;  
-    yyparse();  
-    fclose(file);  
+    yyin = fopen(argv[1], "r");
+    if (!yyin) {
+        perror("Failed to open input file");
+        return 1;
+    }
+
+    output_file = fopen(argv[2], "w");
+    if (!output_file) {
+        perror("Failed to open output file");
+        fclose(yyin);
+        return 1;
+    }
+    yyparse();
+    
 
     printf("\n=== Lexical Analysis Results ===\n");
     print_tokens_side_by_side(); // Print all tokens side by side
@@ -2245,8 +2368,13 @@ int main(int argc, char *argv[]) {
 
     printf("----------------------------------------------------\n");
 
+    fclose(yyin);
+    fclose(output_file); 
+
     printf("\n=== Parse Tree ===\n\n");
     printtree(head, 0); // Start with level 0
+
+    
 
     return 0;
 }

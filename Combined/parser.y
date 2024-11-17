@@ -6,6 +6,8 @@
 
 #define MAX_SYMBOLS 40
 #define MAX_TOKENS 100
+#define MAX_REGISTERS 10
+
 
 char keywords[MAX_TOKENS][50];
 int keyword_count = 0;
@@ -24,6 +26,9 @@ int constant_count = 0;
 
 char strings[MAX_TOKENS][50];
 int string_count = 0;
+
+int available_registers[MAX_REGISTERS] = {0};
+FILE *output_file; // File pointer for writing output
 
 struct node {
     struct node *left;
@@ -53,6 +58,9 @@ struct dataType {
     int scope;    
 } symbol_table[MAX_SYMBOLS];
 
+void register_allocate();
+void register_free(char* register_name);
+
 char* new_temp(); // Function to generate temporary variable names
 char* new_label();
 
@@ -66,6 +74,16 @@ void generate_do_while_loop(const char* condition);
 void generate_cmp(const char* operand1, const char* operand2);
 void generate_jump(const char* label);
 void generate_conditional_jump(const char* condition, const char* label);
+void generate_code_conditional_jump(char* label);
+void generate_code_mul_2(char* left, char* right, char* temp);
+void generate_code_mul_4(char* left, char* right, char* temp);
+void generate_code_div_2(char* left, char* right, char* temp);
+void generate_code_div_4(char* left, char* right, char* temp);
+void generate_code_jump(char* label);
+void generate_code_add(char* left, char* right, char* temp);
+void generate_code_sub(char* left, char* right, char* temp);
+void generate_code_mul(char* left, char* right, char* temp);
+void generate_code_div(char* left, char* right, char* temp);
 
 int count = 0; 
 char type[10];
@@ -200,12 +218,17 @@ for_loop_statement:
 
         // Generate the start of the loop
         printf("%s:\n", start_label);
+        fprintf(output_file,"MOV %s, %s\n", $3, $5); // Initial assignment for the loop variable
+        fprintf(output_file,"%s:\n", start_label); 
         generate_for_loop($4, $6); // Use $5 for the condition limit
         printf("Loop body code generation:\n");
         
         // Generate the condition check and jump
         generate_cmp($8, $6); 
         generate_conditional_jump("JE", end_label);
+        fprintf(output_file,"    ; Output: printf(\"For loop\")\n"); // Output for the for loop
+        fprintf(output_file,"    JMP %s\n", start_label);  // Jump back to the start of the loop
+        fprintf(output_file,"%s:\n", end_label);  // End label
     };  
 
 for_initialization:  
@@ -273,7 +296,8 @@ arithmetic_expression:
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("ADD", $1, $3, temp); // Generate intermediate code for addition
+        generate_code("ADD", $1, $3, temp);
+        generate_code_add($1, $3, temp); // Generate intermediate code for addition
         $$ = temp;
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s + %s", $1, $3); // Ensure correct handling
@@ -286,7 +310,8 @@ arithmetic_expression:
     { 
         printf("Arithmetic expression parsed.\n");
         char *temp = new_temp();
-        generate_code("SUB", $1, $3, temp); // Generate intermediate code for subtraction
+        generate_code("SUB", $1, $3, temp);
+        generate_code_sub($1, $3, temp); // Generate intermediate code for subtraction
         $$ = temp;
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "%s - %s", $1, $3); // Ensure correct handling
@@ -301,12 +326,15 @@ arithmetic_expression:
         char *temp = new_temp();
         if (atoi($3) == 2) {
             // Replace x * 2 with x << 1
-            generate_code("SHL", $1, "1", temp); // SHL is bitwise left shift
+            generate_code("SHL", $1, "1", temp); 
+            generate_code_mul_2($1, "1", temp); // SHL is bitwise left shift// SHL is bitwise left shift
         } else if (atoi($3) == 4) {
             // Replace x * 4 with x << 2
-            generate_code("SHL", $1, "2", temp); // SHL is bitwise left shift
+            generate_code("SHL", $1, "2", temp);
+            generate_code_mul_4($1, "2", temp); // SHL is bitwise left shift // SHL is bitwise left shift
         } else {
-            generate_code("MUL", $1, $3, temp); // Generate intermediate code for multiplication
+            generate_code("MUL", $1, $3, temp); 
+            generate_code_mul($1, $3, temp); // Generate intermediate code for multiplication// Generate intermediate code for multiplication
         }
         $$ = temp;
         char buffer[100];
@@ -322,12 +350,15 @@ arithmetic_expression:
         char *temp = new_temp();
         if (atoi($3) == 2) {
             // Replace x / 2 with x >> 1
-            generate_code("SHR", $1, "1", temp); // SHR is bitwise right shift
+            generate_code("SHR", $1, "1", temp); 
+            generate_code_div_2($1, "1", temp); // SHR is bitwise right shift// SHR is bitwise right shift
         } else if (atoi($3) == 4) {
             // Replace x / 4 with x >> 2
-            generate_code("SHR", $1, "2", temp); // SHR is bitwise right shift
+            generate_code("SHR", $1, "2", temp); 
+            generate_code_div_4($1, "2", temp); // SHR is bitwise right shift// SHR is bitwise right shift
         } else {
-            generate_code("DIV", $1, $3, temp); // Generate intermediate code for division
+            generate_code("DIV", $1, $3, temp); 
+            generate_code_div($1, $3, temp); // Generate intermediate code for division// Generate intermediate code for division
         }
         $$ = temp;
         char buffer[100];
@@ -360,6 +391,10 @@ while_loop_statement:
         generate_cmp($7, $4); 
         generate_conditional_jump("JE", end_label); // Jump to end if condition is false
 
+        fprintf(output_file,"    ; Output: printf(\"While loop\")\n");  // Output for the while loop
+        fprintf(output_file,"    JMP %s\n", start_label);  // Jump back to the start of the loop
+        fprintf(output_file,"%s:\n", end_label);  // End label
+
         // Loop body
         printf("Loop body code generation:\n");
         printf("%s:\n", end_label);
@@ -382,11 +417,18 @@ do_while_statement:
         char* end_label = new_label(); 
 
         printf("%s:\n", start_label);
+
+        fprintf(output_file,"    ; Output: printf(\"Do-while loop\")\n");  // Output for the do-while loop
+        fprintf(output_file,"    INC %s\n", $1);  // Increment first, for demonstration
         generate_do_while_loop($6); // Generate do-while loop with condition
         
         // Generate the condition check and jump
         generate_cmp($6, $8); 
-        generate_conditional_jump("JE", end_label); // Jump to end if condition is false
+        generate_conditional_jump("JE", end_label); 
+        
+        
+        fprintf(output_file,"    JMP %s\n", start_label);  // Jump back to the start of the loop
+        fprintf(output_file,"%s:\n", end_label);  // End label// Jump to end if condition is false
 
         // Loop body
         printf("Loop body code generation:\n");
@@ -474,45 +516,120 @@ void generate_code(const char* operation, const char* operand1, const char* oper
     printf("Intermediate Code: %s %s, %s -> %s\n", operation, operand1, operand2, result);  
 }  
 
-void generate_assignment(const char* variable, const char* value) {  
-     
-}  
+void generate_assignment(const char* var, const char* expr) {
+    fprintf(output_file, "MOV %s, %s\n", var, expr); // Move expr into var
+}
 
 void generate_increment(const char* variable) {  
     char* temp = new_temp();  
     printf("Intermediate Code: %s = %s + 1\n", temp, variable);  
+    fprintf(output_file, "INC %s\n", variable); // Increment var
 }  
 
 void generate_decrement(const char* variable) {  
     char* temp = new_temp();  
-    printf("Intermediate Code: %s = %s - 1\n", temp, variable);  
-}  
+    printf("Intermediate Code: %s = %s - 1\n", temp, variable); 
+    fprintf(output_file, "DEC %s\n", variable); // Decrement var
+} 
+
+
+
+void generate_code_add(char* left, char* right, char* temp) {
+    fprintf(output_file, "ADD %s, %s, %s\n", left, right, temp); // Generate add code
+}
+
+void generate_code_sub(char* left, char* right, char* temp) {
+    fprintf(output_file, "SUB %s, %s, %s\n", left, right, temp); // Generate subtract code
+}
+
+void generate_code_mul(char* left, char* right, char* temp) {
+    fprintf(output_file, "MUL %s, %s, %s\n", left, right, temp); // Generate multiply code
+}
+
+void generate_code_div(char* left, char* right, char* temp) {
+    fprintf(output_file, "DIV %s, %s, %s\n", left, right, temp); // Generate divide code
+}
 
 void generate_for_loop(const char* loop_var, const char* limit) {  
-    printf("For loop variable: %s, Limit: %s\n", loop_var, limit);  
+    printf("For loop variable: %s, Limit: %s\n", loop_var, limit);
+    fprintf(output_file,"For loop variable: %s, Limit: %s\n", loop_var, limit);  
 }  
 
 void generate_while_loop(const char* condition) {  
     printf("While loop condition: %s\n", condition);  
-}  
+    fprintf(output_file, "WHILE loop for condition: %s\n", condition);
+}
+
 
 void generate_do_while_loop(const char* condition) {  
     printf("Do-while loop condition: %s\n", condition);  
+    fprintf(output_file, "DO-WHILE loop for condition: %s\n", condition);
 }  
 
 void generate_cmp(const char* operand1, const char* operand2) {  
     printf("Intermediate Code: CMP %s, %s\n", operand1, operand2);  
+    fprintf(output_file, "CMP %s, %s\n", operand1, operand2); // Compare the two operands
 }  
 
 void generate_jump(const char* label) {  
-    printf("Intermediate Code: JMP %s\n", label);  
+    printf("Intermediate Code: JMP %s\n", label); 
+    fprintf(output_file, "JUMP %s\n", label); 
 }  
 
 void generate_conditional_jump(const char* condition, const char* label) {  
     printf("Intermediate Code: %s %s\n", condition, label);  
+    fprintf(output_file, "JUMP_IF_FALSE %s\n", label);
 }  
 
-int main(int argc, char *argv[]) {  
+void generate_code_jump(char* label) {
+    fprintf(output_file, "JUMP %s\n", label);
+}
+
+void generate_code_conditional_jump(char* label) {
+    fprintf(output_file, "JUMP_IF_FALSE %s\n", label);
+}
+
+void generate_code_mul_2(char* left, char* right, char* temp) {
+    fprintf(output_file, "SHL %s, %s, %s\n", left, right, temp);
+    
+}
+
+void generate_code_mul_4(char* left, char* right, char* temp) {
+    fprintf(output_file, "SHL %s, %s, %s\n", left, right, temp);
+    
+}
+
+void generate_code_div_2(char* left, char* right, char* temp) {
+    fprintf(output_file, "SHR %s, %s, %s\n", left, right, temp);
+    
+}
+
+void generate_code_div_4(char* left, char* right, char* temp) {
+    fprintf(output_file, "SHR %s, %s, %s\n", left, right, temp);
+    
+}
+
+void register_allocate() {
+    // A simple register allocation for temporary variables (use the first available register)
+    for (int i = 0; i < MAX_REGISTERS; i++) {
+        if (available_registers[i] == 0) {
+            available_registers[i] = 1;  // Mark the register as used
+            printf("ALLOC R%d\n", i);
+            return;
+        }
+    }
+    // If no registers are available, we can just print an error or use a spill strategy
+    printf("Error: No registers available!\n");
+}
+
+void register_free(char* register_name) {
+    // Mark the register as free
+    int reg_num = atoi(register_name + 1); // Assuming register name is in the form Rn
+    available_registers[reg_num] = 0; // Free the register
+    printf("FREE %s\n", register_name); // Print the free register operation
+}
+
+int main(int argc, char** argv) {  
     if (argc < 3) {
         fprintf(stderr, "Usage: %s <input_file> <output_file>\n", argv[0]);
         return 1;
@@ -531,8 +648,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     yyparse();
-    fclose(yyin);
-    fclose(output_file); 
+    
 
     printf("\n=== Lexical Analysis Results ===\n");
     print_tokens_side_by_side(); // Print all tokens side by side
@@ -553,8 +669,13 @@ int main(int argc, char *argv[]) {
 
     printf("----------------------------------------------------\n");
 
+    fclose(yyin);
+    fclose(output_file); 
+
     printf("\n=== Parse Tree ===\n\n");
     printtree(head, 0); // Start with level 0
+
+    
 
     return 0;
 }
