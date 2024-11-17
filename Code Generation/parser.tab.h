@@ -75,9 +75,9 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 60 "parser.y"
+#line 57 ".\\parser.y"
 
-    char* str;         // For tokens like IDENTIFIER, KEYWORD, etc.
+    char* str;        
 
 
 
