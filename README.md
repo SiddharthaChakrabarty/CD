@@ -48,3 +48,9 @@ Please ensure your code follows the project's coding style and includes appropri
 ## License
 
 MIT License
+
+---
+
+## Release notes
+
+Auto-generated release notes document: [View release notes](https://docs.google.com/document/d/1UMMJeLoC0HqKbb9TudHOSES3YzmKnY37zX3oEGWS9Rc/edit)
